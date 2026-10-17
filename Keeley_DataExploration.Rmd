@@ -1,0 +1,31 @@
+---
+title: "Keeley Data Exploration"
+author: "Elizabeth Keeley"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Set up 
+1. Set up your session:
+
+```{r 1. Project Setup, message = FALSE}
+# Loading packages and checking working directory
+library(tidyverse)
+#library(rvest)
+library(here)
+#library(lubridate)
+#library(dplyr)
+here()
+library(sf)
+
+# Read in data
+
+cal_gpkg <- "Data/Raw/california.gpkg"
+cal_data <- st_read(cal_gpkg)
+print(cal_data)
+
+
+
+
+```
