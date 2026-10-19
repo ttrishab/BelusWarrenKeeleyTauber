@@ -2,6 +2,9 @@
 .Rhistory
 .Rapp.history
 
+#Raw_large
+Data/Raw/Raw_large/*
+
 # Session Data files
 .RData
 .RDataTmp
