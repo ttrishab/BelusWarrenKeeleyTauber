@@ -21,10 +21,18 @@ library(sf)
 
 # Read in data
 
+# California boundary
 cal_gpkg <- "Data/Raw/california.gpkg"
-cal_data <- read_sf(cal_gpkg)
-print(cal_data)
+cal_boundary <- read_sf(cal_gpkg)
+print(cal_boundary)
 
-head(cal_data)
+plot(cal_boundary)
+
+# Daily Data
+daily_data <- read_sf ("Data/Raw/Raw_large/fired_uscan_to2021121_daily_gpkg/fired_uscan_to2021121_daily_fixed.gpkg")
+
+
+# Daily data extracted for California
+cal_daily <- st_intersection(daily_data,cal_boundary)
 
 ```
