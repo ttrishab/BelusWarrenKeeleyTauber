@@ -22,10 +22,14 @@ library(sf)
 # Read in data
 
 cal_gpkg <- "Data/Raw/california.gpkg"
-cal_data <- st_read(cal_gpkg)
+cal_data <- read_sf(cal_gpkg)
 print(cal_data)
 
+head(cal_data)
+plot(cal_data)
 
+# Daily Data
+daily_data <- read_sf ("Data/Raw/Raw_large/fired_uscan_to2021121_daily_gpkg/fired_uscan_to2021121_daily_fixed.gpkg")
 
 
 ```
