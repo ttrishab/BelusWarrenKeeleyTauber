@@ -22,10 +22,10 @@ library(sf)
 # Read in data
 
 cal_gpkg <- "Data/Raw/california.gpkg"
-cal_data <- st_read(cal_gpkg)
+cal_data <- read_sf(cal_gpkg)
 print(cal_data)
 
-
+head(cal_data)
 
 
 ```
