@@ -15,11 +15,14 @@ library(tidyverse)
 #library(rvest)
 library(here)
 #library(lubridate)
-#library(dplyr)
+library(dplyr)
 here()
 library(sf)
+```
+## Read in data boundaries
 
-# Read in data
+```{r 1. Project Setup, message = FALSE}
+## Read in data
 
 # California boundary
 cal_gpkg <- "Data/Raw/california.gpkg"
@@ -28,10 +31,32 @@ print(cal_boundary)
 
 plot(cal_boundary)
 
-# Daily Data
-daily_data <- read_sf("Data/Raw/Raw_large/fired_uscan_to2021121_daily_gpkg/fired_uscan_to2021121_daily_fixed.gpkg",
-            bbox = st_bbox(cal_boundary))d
+# Counties boundaries
+# https://data.ca.gov/@california-department-of-technology/california-county-boundaries-and-identifiers
+
+counties_boundary <- read_sf("Data/Raw/Raw_large/California_County_Boundaries_and_Identifiers_Blue_Version_view_-4451679308524472862.gpkg")
 
 
+# Trinity county
+trinity_county <- counties_boundary %>%
+  select(CDTFA_COUNTY,SHAPE) %>%
+  filter (CDTFA_COUNTY == "Trinity County")
+
+plot(trinity_county)
+```
+## Wildfire Data
+
+```{r 1. Project Setup, message = FALSE}
+
+#Daily Data
+### THIS CRASHED MY RSTUDIO, WARNING ### 
+#daily_data <- read_sf("Data/Raw/Raw_large/fired_uscan_to2021121_daily_gpkg/fired_uscan_to2021121_daily_fixed.gpkg")
+
+# Event Data
+event_data <- read_sf("Data/Raw/Raw_large/fired_uscan_to2021121_events_gpkg_shp/fired_uscan_to2021121_events.gpkg")
+plot(event_data)
+
+
+#trinity_events <- read_sf(event_data, bbox = st_bbox(trinity_county))
 
 ```
