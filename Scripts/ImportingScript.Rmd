@@ -1,0 +1,35 @@
+---
+title: "ImportingScript"
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+## Set up 
+1. Set up your session:
+
+```{r 1. Project Setup, message = FALSE}
+# Loading packages and checking working directory
+library(tidyverse)
+library(here)
+here()
+library(sf)
+library(dplyr)
+```
+## Read in Data
+
+```{r 1. Project Data, message = FALSE}
+
+# California boundary
+cal_boundary <- read_sf(here("./Data/Raw/california.gpkg"))
+dim(cal_boundary)
+
+
+# Event Data
+event_data <- read_sf(here("./Data/Raw/Raw_large/fired_uscan_to2021121_events_gpkg_shp/fired_uscan_to2021121_events.gpkg"))
+dim(event_data)
+
+```
+
