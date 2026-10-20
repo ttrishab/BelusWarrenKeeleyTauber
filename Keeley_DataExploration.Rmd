@@ -29,10 +29,9 @@ print(cal_boundary)
 plot(cal_boundary)
 
 # Daily Data
-daily_data <- read_sf ("Data/Raw/Raw_large/fired_uscan_to2021121_daily_gpkg/fired_uscan_to2021121_daily_fixed.gpkg")
+daily_data <- read_sf("Data/Raw/Raw_large/fired_uscan_to2021121_daily_gpkg/fired_uscan_to2021121_daily_fixed.gpkg",
+            bbox = st_bbox(cal_boundary))d
 
 
-# Daily data extracted for California
-cal_daily <- st_intersection(daily_data,cal_boundary)
 
 ```
