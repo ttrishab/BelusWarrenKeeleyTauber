@@ -1,6 +1,8 @@
 README file for datasets, add any explanations as necessary.
 
-The MODIS MCD64A1 burned area product is the origin of this dataset. The MCD64A1 product is a raster grid with a resolution of 463 meters. We accessed preprocessed data from https://scholar.colorado.edu/concern/datasets/8336h304x.
+The MODIS MCD64A1 burned area product is the origin of this dataset. The MCD64A1 product is a raster grid with a resolution of 463 meters. We accessed preprocessed data from https://scholar.colorado.edu/concern/datasets/8336h304x. The data collection dates are November 2000 - April 2021. The spatial window is 5 pixels and the temporal window is 11 days.
+
+Balch, J.K.; St. Denis, L.A.; Mahood, A.L.; Mietkiewicz, N.P.; Williams, T.M.; McGlinchy, J.; Cook, M.C. FIRED (Fire Events Delineation): An Open, Flexible Algorithm and Database of US Fire Events Derived from the MODIS Burned Area Product (2001–2019). Remote Sens. 2020, 12, 3498. https://doi.org/10.3390/rs12213498 
 
 We clipped the original dataset to the boundaries of the state of California. 
 Transboundary fires were included in their entirety, meaning that fires partially in Nevada, Oregon, and Arizona are part of our dataset.
