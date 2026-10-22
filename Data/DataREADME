@@ -7,7 +7,10 @@ Balch, J.K.; St. Denis, L.A.; Mahood, A.L.; Mietkiewicz, N.P.; Williams, T.M.; M
 We clipped the original dataset to the boundaries of the state of California. 
 Transboundary fires were included in their entirety, meaning that fires partially in Nevada, Oregon, and Arizona are part of our dataset.
 
-Definitions:
+Row Representation:
+Each row represents one day within each fire event.
+
+Variable Definitions:
 Variable: id
 Description: Unique identifier of the fire event.
 
