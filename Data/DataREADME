@@ -1,1 +1,4 @@
 README file for datasets, add any explanations as necessary.
+
+We clipped the original dataset to the boundaries of the state of California. 
+Transboundary fires were included in their entirety, meaning that fires partially in Nevada, Oregon, and Arizona are part of our dataset.
