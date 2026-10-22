@@ -1,0 +1,30 @@
+---
+title: "ImportingArcGIS"
+output: html_document
+editor_options:
+  chunk_output_type: console
+---
+
+## Set up 
+1. Set up your session:
+
+```{r 1. Project Setup, message = FALSE}
+# Loading packages and checking working directory
+library(tidyverse)
+library(here)
+here()
+library(sf)
+library(dplyr)
+```
+## Read in Data
+
+```{r 1. Project Data, message = FALSE}
+
+# Event Data
+california_events <- read_sf(here("./Data/Raw/California_events.shp"))
+dim(california_events)
+
+st_crs(california_events)
+plot(california_events)
+
+```
