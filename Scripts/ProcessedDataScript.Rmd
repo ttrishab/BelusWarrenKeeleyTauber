@@ -1,0 +1,73 @@
+---
+title: "Processed Data"
+output: html_document
+editor_options:
+  chunk_output_type: console
+---
+
+## Set up 
+
+```{r 1. Project Setup, message = FALSE}
+# Loading packages and checking working directory
+library(tidyverse)
+library(here)
+here()
+library(sf)
+library(dplyr)
+library(lubridate)
+```
+
+## Read in Data
+
+```{r 1. Project Data, message = FALSE}
+# Event Data
+california_events <- read_sf(here("./Data/Raw/California_events.shp"))
+dim(california_events)
+```
+
+## Editing Variable Classes
+
+```{r 1. Project Data, message = FALSE}
+# Changing ig_date variable from character to date
+california_events$ig_date <- ymd(california_events$ig_date)
+
+# Changing last_date variable from from character to date
+california_events$last_date <- ymd(california_events$last_date)
+
+# Changing mx_grw_dte variable from character to date
+california_events$mx_grw_dte <- ymd(california_events$mx_grw_dte)
+
+# Changing lc_name variable from character to factor
+california_events$lc_name <- as.factor(california_events$lc_name)
+
+# Viewing the factor levels of land cover types
+levels(california_events$lc_name)
+# There aren't any n/a or unclassified types that need to be removed
+
+# Changing eco_name variable from character to factor
+california_events$eco_name <- as.factor(california_events$eco_name)
+```
+
+## Selecting Variables
+
+```{r 1. Project Data, message = FALSE}
+#Selecting variables that we want to include in the processed dataset
+
+california_events_processed <- select(california_events, 
+                                      id, ig_date, ig_day, ig_month, ig_year, 
+                                      last_date, event_dur, tot_ar_km2, fsr_km2_dy,
+                                      mx_grw_km2, mn_grw_km2, mu_grw_km2, mx_grw_dte,
+                                      lc_code, lc_mode, lc_name, lc_desc, lc_type,
+                                      eco_mode, eco_type, eco_name, tot_perim)
+
+#view(california_events_processed)
+```
+
+#Saving the Processed Data
+
+```{r 1. Project Data, message = FALSE}
+# Saving the processed dataset in the Processed Data folder
+write.csv(california_events_processed,
+          row.names = FALSE,
+          file = here("Data/Processed"))
+```
