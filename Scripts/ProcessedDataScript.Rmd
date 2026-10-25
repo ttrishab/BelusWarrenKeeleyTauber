@@ -69,5 +69,5 @@ california_events_processed <- select(california_events,
 # Saving the processed dataset in the Processed Data folder
 write.csv(california_events_processed,
           row.names = FALSE,
-          file = here("Data/Processed"))
+          file = here("Data/Processed/california_events_processed.csv"))
 ```
