@@ -58,7 +58,8 @@ california_events_processed <- select(california_events,
                                       last_date, event_dur, tot_ar_km2, fsr_km2_dy,
                                       mx_grw_km2, mn_grw_km2, mu_grw_km2, mx_grw_dte,
                                       lc_code, lc_mode, lc_name, lc_desc, lc_type,
-                                      eco_mode, eco_type, eco_name, tot_perim)
+                                      eco_mode, eco_type, eco_name, tot_perim)|>
+  st_drop_geometry()
 
 #view(california_events_processed)
 ```
