@@ -33,3 +33,28 @@ ggplot(california_events_processed, aes(x = lc_name, y = mu_grw_km2))+
   coord_flip() +
   theme_bw() 
 ```
+# Data Quality Audit
+The original event data source in the Scripts/ImportingScript.Rmd shown in the line stating event_data <- read_sf(here("./Data/Raw/Raw_large/fired_uscan_to2021121_events_gpkg_shp/fired_uscan_to2021121_events.gpkg")) was trimmed to the California boundary within ArcGIS. After importing the event data along with the California boundary found in Data/Raw/california.gpkg, the tool "Select Layer By Location" was used to select the input of events that intersected with the California boundary. Next, the fire event feature layer attribute table was opened and the selected items was reversed so that it only highlighted what was not intersecting. Finally, the selection of non-intersecting polygons of fire events were deleted from the events feature layer and exported to Data/Raw/california_events.shp. 
+```{r}
+# Data Quality Audit
+
+event_data <- read_sf(here("./Data/Raw/Raw_large/fired_uscan_to2021121_events_gpkg_shp/fired_uscan_to2021121_events.gpkg"))
+dim(event_data)
+
+california_events <- read_sf(here("./Data/Raw/California_events.shp"))
+dim(california_events)
+
+```
+Trimming the data set to California narrowed the amount of observations from 130,761 to 4,329 and added the shape length and shape area columns for the polygons. The temporal coverage for the California events is from 12/11/2000 to 06/01/2021. 
+For the primary cleaning of this data, the columns containing datetime information were transformed from character to date and the land cover/ ecosystem names were transformed from character to factor. Then the columns that specified the event growth in pixels were excluded from the processed dataframe, since their equivalent in square kilometers was given and ultimately easier to interpret. Also, the unneccessary shape length and shape area columns from ArcGIS were removed. There are no NAs in the dataframe and no duplicate rows.
+```{r}
+# number of NA values in dataframe = 0
+sum(is.na(california_events_processed))
+which(is.na(california_events_processed))
+is.na(california_events_processed)
+
+# number of duplicated rows = 0
+sum(duplicated(california_events_processed))
+
+```
+
