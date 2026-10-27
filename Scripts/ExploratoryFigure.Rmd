@@ -40,7 +40,8 @@ The original event data source in the Scripts/ImportingScript.Rmd shown in the l
 ```{r}
 # Data Quality Audit
 
-event_data <- read_sf(here("./Data/Raw/Raw_large/fired_uscan_to2021121_events_gpkg_shp/fired_uscan_to2021121_events.gpkg"))
+event_data <- read_sf(here
+                      ("./Data/Raw/Raw_large/fired_uscan_to2021121_events_gpkg_shp/fired_uscan_to2021121_events.gpkg"))
 dim(event_data)
 
 california_events <- read_sf(here("./Data/Raw/California_events.shp"))
