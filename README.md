@@ -78,3 +78,6 @@ Description: Character string of the ecoregion type where the event occurred.
 Variable: tot_perim
 Description: Total perimeter of the fire event. 
 
+Variable: geom
+Description: list of geometry coordinates
+
