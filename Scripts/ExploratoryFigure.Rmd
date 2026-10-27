@@ -48,7 +48,7 @@ dim(california_events)
 Trimming the data set to California narrowed the amount of observations from 130,761 to 4,329 and added the shape length and shape area columns for the polygons. The temporal coverage for the California events is from 12/11/2000 to 06/01/2021. 
 For the primary cleaning of this data, the columns containing datetime information were transformed from character to date and the land cover/ ecosystem names were transformed from character to factor. Then the columns that specified the event growth in pixels were excluded from the processed dataframe, since their equivalent in square kilometers was given and ultimately easier to interpret. Also, the unnecessary shape length and shape area columns from ArcGIS along with the geospatial columns (x,y) were removed. There are three NAs in the dataframe within two different event rows. They are missing information for either eco_name or both eco_mode and eco_name. We have decided to keep these because they don't affect analysis for land cover and can be dropped later if needed. There are no duplicate rows.
 ```{r}
-# number of NA values in dataframe = 3
+# number of NA values in dataframe = 0
 sum(is.na(california_events_processed))
 which(is.na(california_events_processed))
 california_events_processed[!complete.cases(california_events_processed),]
