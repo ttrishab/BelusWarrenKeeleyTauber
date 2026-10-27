@@ -16,7 +16,7 @@ library(dplyr)
 library(ggplot2)
 ```
 
-```{r setup, include=FALSE}
+```{r}
 california_events_processed <- read_csv(here("Data/Processed/california_events_processed.csv"))
 ggplot(california_events_processed, aes(x = ig_year, y = mu_grw_km2))+
        geom_point(size = 2, alpha = 0.5, color = "grey30")+
