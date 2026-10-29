@@ -1,0 +1,63 @@
+---
+title: "Draft Analysis"
+output:
+  pdf_document: default
+  html_document: default
+date: "2026-10-29"
+---
+
+```{r setup, include=FALSE}
+#Loading packages and setting working directory
+library(tidyverse)
+library(here)
+library(agricolae)
+library(lubridate)
+
+california_events_processed <- read_csv(here("Data/Processed/california_events_processed.csv"))
+
+# Changing lc_name variable from character to factor
+california_events_processed$lc_name <- as.factor(california_events_processed$lc_name)
+
+# Changing eco_name variable from character to factor
+california_events_processed$eco_name <- as.factor(california_events_processed$eco_name)
+
+# changing month to factor format
+california_events_processed$ig_month <- as.factor(california_events_processed$ig_month)
+
+#changing year to factor format
+california_events_processed$ig_year <- as.factor(california_events_processed$ig_year)
+```
+
+## What is the relationship between time of year and which land cover type sees the longest fast fires?
+
+### Response variable: event length? Predictors: land cover, month, year
+
+```{r}
+# Group data
+event_length_group <- california_events_processed %>%
+  group_by(lc_name, ig_month, ig_year) %>%
+  summarise(mean_event_dur = mean(event_dur),
+            max_event_dur = max(event_dur),
+            min_event_dur = min(event_dur)) %>%
+  ungroup()
+
+# create new data frame of just question variables
+event_length <- california_events_processed %>%
+  select(lc_name, ig_month, ig_year, event_dur)
+
+```
+
+Two-way ANOVA
+```{r}
+# Format as aov
+eventlength_aov2 <- aov(data = event_length, event_dur ~ ig_month + lc_name)
+summary(eventlength_aov2)
+
+# Format as lm
+Litter.anova.2way2 <- lm(data = Litter, dryMass ~ functionalGroup + nlcdClass)
+summary(Litter.anova.2way2)
+
+# Run a post-hoc test for pairwise differences
+TukeyHSD(Litter.anova.2way)
+```
+
