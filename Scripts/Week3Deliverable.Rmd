@@ -1,0 +1,64 @@
+---
+title: "Week3Deliverable"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Refined Questions and Analysis Choices
+
+#Central Question: 
+- What is the relationship between temporal / land cover factors and fast fire events (high mean growth rate per event)
+
+#Supporting Questions: 
+- What is the relationship between temporal / land cover factors and the longest fire events (duration).
+- Is there a relationship between land cover and maximum, mean, minimum daily fire growth per event.
+
+
+# Observations and Variables
+There are a total of 4329 observations (fire events) available to use
+
+Variable: ig_month 
+Description: The month of the earliest date contained in the event
+
+Variable: ig_year
+Description: The year of the earliest date contained in the event.
+
+Variable: fsr_km2_dy
+Description: Total kilometers burned for the entire event divided by the duration of the fire event. (***use this as response variable for central question???)
+
+Variable: event_dur
+Description: Duration of the event in days
+
+Variable: mx_grw_km2
+Description: Maximum daily fire growth per event in square kilometers
+
+Variable: mn_grw_km2
+Description: Minimum daily fire growth per event in square kilometers
+
+Variable: mu_grw_km2
+Description: Mean daily fire growth per event in square kilometers
+
+Variable: lc_name
+Description: Character string of the landcover type from the year before the fire. 
+
+# Intended Comparison / Unresolved Data Limitations
+An intended comparison is the central question and first supporting question. Addressing whether the temporal / land factors are contributing more to the growth rate of the fire events or the duration of the fire event.
+
+There are no unresolved data limitations, since there are no gaps for the intended variables.
+
+
+## Purposeful Explanatory Evidence
+
+# Figures
+
+# Summary Table
+
+
+
+
+
+## Initial Analytical Application
+
+# Central Question ANOVA
+
