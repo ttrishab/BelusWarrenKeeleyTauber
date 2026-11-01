@@ -47,10 +47,106 @@ An intended comparison is the central question and first supporting question. Ad
 
 There are no unresolved data limitations, since there are no gaps for the intended variables.
 
-
 ## Purposeful Explanatory Evidence
 
+```{r setup, message=FALSE}
+#Loading packages and setting working directory
+library(tidyverse)
+library(here)
+here()
+#install.packages("agricolae")
+library(agricolae)
+library(lubridate)
+library(ggthemes)
+
+california_events_processed <- read_csv(here("Data/Processed/california_events_processed.csv"))
+
+# Changing lc_name variable from character to factor
+california_events_processed$lc_name <- as.factor(california_events_processed$lc_name)
+
+# Changing eco_name variable from character to factor
+california_events_processed$eco_name <- as.factor(california_events_processed$eco_name)
+
+# changing month to factor format
+california_events_processed$ig_month <- as.factor(california_events_processed$ig_month)
+
+#changing year to factor format
+california_events_processed$ig_year <- as.factor(california_events_processed$ig_year)
+
+#creating the theme
+theme <- theme_bw() +
+  #making the title bold, 13 font, and centered
+  theme(plot.title = element_text(face = "bold", size = 10, hjust = 0.5),
+       #making my axis titles bold and 10 font
+         axis.title = element_text(face = "bold", size = 10),
+       #positioning my legend on the right side of the plot 
+       legend.position = "right"
+  )
+
+#setting the theme
+theme_set(theme)
+
+#Establishing the color palette
+canva_pal("Birds and berries")
+```
+
+### What is the relationship between time of year and which land cover types see the fastest fires?
+
+### Response variable: mean growth; Predictors: land cover, month, year
+
+```{r - time of year, land cover type, mean growth two-way ANOVA}
+# Group data
+mean_growth_group <- california_events_processed %>%
+  group_by(lc_name, ig_month, ig_year) %>%
+  summarise(mean_growth_rate = mean(mu_grw_km2))
+
+#viewing the grouped data frame and commenting it out after
+#view(mean_growth_group)
+
+# create new data frame of just question variables
+mean_growth <- california_events_processed %>%
+  select(lc_name, ig_month, ig_year, mu_grw_km2)
+
+#viewing the data frame of variables and commenting it out after
+#view(mean_growth)
+
+# Format as aov
+mean_growth_aov2 <- aov(data = mean_growth, mu_grw_km2 ~ ig_month + lc_name)
+summary(mean_growth_aov2)
+
+# Format as lm
+mean_growth_anova_2way2 <- lm(data = mean_growth, mu_grw_km2 ~ ig_month + lc_name)
+summary(mean_growth_anova_2way2)
+
+# Run a post-hoc test for pairwise differences
+TukeyHSD(mean_growth_aov2)
+
+```
+
 # Figures
+```{r - figures}
+#Plot of mean growth for each land cover class and month
+mean_growth_anova_plot <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month, color = lc_name)) +
+  geom_boxplot() +
+  geom_point(alpha = 0.5, size= 0.8) +
+  labs(title = "Mean Growth of Wildfires across Land Use Classes and Months",
+       x= "Month",
+       y="Mean Growth (km2)") 
+
+mean_growth_anova_plot
+
+#Plot of mean growth for each month separated by land cover class
+mean_growth_anova_plot_separate <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month, color = lc_name)) +
+  geom_boxplot() +
+  geom_point(alpha = 0.5, size= 0.8) +
+  facet_wrap(vars(lc_name)) +
+  labs(title = "Mean Growth of Wildfires across Land Use Classes and Months",
+       x= "Month",
+       y="Mean Growth (km2)") 
+
+mean_growth_anova_plot_separate
+```
+
 
 # Summary Table
 
@@ -58,7 +154,14 @@ There are no unresolved data limitations, since there are no gaps for the intend
 
 
 
-## Initial Analytical Application
+# Initial Analytical Application
+## Mean Growth
+To begin to understand if there is a relationship between time of year and which land cover types experience the fastest fires, we completed a two way ANOVA as well as Tukey's Honest Significant Differences. We also created two scatterplots to visualize these relationships, one with all land cover classes combined and one with them separated. The two way ANOVA indicated significance for the following land cover classes: Closed Shrublands (0.000000000247), Evergreen Needleleaf Forests (0.0000053), Grasslands (0.0000163), Open Shrublands (0.0000000128), Woody Savannas (0.000894), Savannas (0.002197), and Evergreen Broadleaf Forests (0.045657), as well as the following months: August (0.001385), July (0.031237), and October (0.019439). These results can also visually be seen seen in the scatterplots. 
+
 
 # Central Question ANOVA
+
+
+
+```
 
