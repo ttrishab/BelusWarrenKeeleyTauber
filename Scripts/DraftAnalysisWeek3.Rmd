@@ -50,14 +50,14 @@ event_length <- california_events_processed %>%
 Two-way ANOVA
 ```{r}
 # Format as aov
-eventlength_aov2 <- aov(data = event_length, event_dur ~ ig_month + lc_name)
-summary(eventlength_aov2)
+eventlength_aov <- aov(data = event_length, event_dur ~ ig_month + lc_name)
+summary(eventlength_aov)
 
 # Format as lm
-Litter.anova.2way2 <- lm(data = Litter, dryMass ~ functionalGroup + nlcdClass)
-summary(Litter.anova.2way2)
+eventlength_aov2 <- lm(data = event_length, event_dur ~ ig_month + lc_name)
+summary(eventlength_aov2)
 
 # Run a post-hoc test for pairwise differences
-TukeyHSD(Litter.anova.2way)
+TukeyHSD(eventlength_aov)
 ```
 

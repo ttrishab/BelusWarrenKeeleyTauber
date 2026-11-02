@@ -3,49 +3,57 @@ title: "Week3Deliverable"
 output: html_document
 editor_options: 
   chunk_output_type: console
+  markdown: 
+    wrap: 72
 ---
 
 ## Refined Questions and Analysis Choices
 
-#Central Question: 
-- What is the relationship between temporal / land cover factors and fast fire events (high mean growth rate per event)
+#Central Question: - What is the relationship between temporal / land
+cover factors and fast fire events (high mean growth rate per event)
 
-#Supporting Questions: 
-- What is the relationship between temporal / land cover factors and the longest fire events (duration).
-- Is there a relationship between land cover and maximum, mean, minimum daily fire growth per event.
-
+#Supporting Questions: - What is the relationship between temporal /
+land cover factors and the longest fire events (duration). - Is there a
+relationship between land cover and maximum, mean, minimum daily fire
+growth per event.
 
 # Observations and Variables
+
 There are a total of 4329 observations (fire events) available to use
 
-Variable: ig_month 
-Description: The month of the earliest date contained in the event
+Variable: ig_month Description: The month of the earliest date contained
+in the event
 
-Variable: ig_year
-Description: The year of the earliest date contained in the event.
+Variable: ig_year Description: The year of the earliest date contained
+in the event.
 
-Variable: fsr_km2_dy
-Description: Total kilometers burned for the entire event divided by the duration of the fire event. (***use this as response variable for central question???)
+Variable: fsr_km2_dy Description: Total kilometers burned for the entire
+event divided by the duration of the fire event. (\*\*\*use this as
+response variable for central question???)
 
-Variable: event_dur
-Description: Duration of the event in days
+Variable: event_dur Description: Duration of the event in days
 
-Variable: mx_grw_km2
-Description: Maximum daily fire growth per event in square kilometers
+Variable: mx_grw_km2 Description: Maximum daily fire growth per event in
+square kilometers
 
-Variable: mn_grw_km2
-Description: Minimum daily fire growth per event in square kilometers
+Variable: mn_grw_km2 Description: Minimum daily fire growth per event in
+square kilometers
 
-Variable: mu_grw_km2
-Description: Mean daily fire growth per event in square kilometers
+Variable: mu_grw_km2 Description: Mean daily fire growth per event in
+square kilometers
 
-Variable: lc_name
-Description: Character string of the landcover type from the year before the fire. 
+Variable: lc_name Description: Character string of the landcover type
+from the year before the fire.
 
 # Intended Comparison / Unresolved Data Limitations
-An intended comparison is the central question and first supporting question. Addressing whether the temporal / land factors are contributing more to the growth rate of the fire events or the duration of the fire event.
 
-There are no unresolved data limitations, since there are no gaps for the intended variables.
+An intended comparison is the central question and first supporting
+question. Addressing whether the temporal / land factors are
+contributing more to the growth rate of the fire events or the duration
+of the fire event.
+
+There are no unresolved data limitations, since there are no gaps for
+the intended variables.
 
 ## Purposeful Explanatory Evidence
 
@@ -123,7 +131,44 @@ TukeyHSD(mean_growth_aov2)
 
 ```
 
+## What is the relationship between time of year and which land cover type sees the longest fast fires?
+
+### Response variable: event length Predictors: land cover, month, year
+
+```{r}
+# Group data
+event_length_group <- california_events_processed %>%
+  group_by(lc_name, ig_month, ig_year) %>%
+  summarise(mean_event_dur = mean(event_dur),
+            max_event_dur = max(event_dur),
+            min_event_dur = min(event_dur)) %>%
+  ungroup()
+
+# create new data frame of just question variables
+event_length <- california_events_processed %>%
+  select(lc_name, ig_month, ig_year, event_dur)
+
+```
+
+Two-way ANOVA
+```{r}
+# Format as aov
+eventlength_aov <- aov(data = event_length, event_dur ~ ig_month + lc_name)
+summary(eventlength_aov) # the null hypothesis is that there is no difference in time of year or land cover type in their relationship to fast fire event length. p-values <.05 mean that the null hypothesis can be rejected and that there is a difference between at least two months and at least two land cover types. 
+
+# Run a post-hoc test for pairwise differences
+TukeyHSD(eventlength_aov)
+# There is a significant difference in fast fire event length between september and january (january is higher, p=0.0000328). There is a significant difference in fast fire event length between March and February (February is higher, p= 0.0439883). There is a significant difference in fast fire event length between September and February (February is higher, p= 0.0000000). Other months between which there are significant differences in event length are: april-march, may-march, november-march, july-april, august-april, september-april, july-may,august-may, spetember-may, october-may, july-june, september-june, september-july, november-july, september-august, november-august, october-september, november-september, december-september, november-october. Seems like september is consistenlty significantly different from the event lengths in other months?
+# There is a significant difference in event length between: Evergreen Needleleaf Forests-Closed Shrublands(*), Evergreen Broadleaf Forests-Croplands(*), Evergreen Needleleaf Forests-Croplands(*), Grasslands-Croplands(*), Grasslands(*)-Evergreen Needleleaf Forests, Open Shrublands(*)-Evergreen Needleleaf Forests, Permanent Wetlands(*)-Evergreen Needleleaf Forests, Savannas(*)-Evergreen Needleleaf Forests, Woody Savannas(*)-Evergreen Needleleaf Forests. (*) is next to the one that is higher. 
+
+# Format as lm
+eventlength_aov2 <- lm(data = event_length, event_dur ~ ig_month + lc_name)
+summary(eventlength_aov2)
+#The Multiple R-squared ia 0.1053. The Adjusted R-squared is 0.1004. This means that these variables don't explain much of the variation, and more variables should be added to the model. 
+```
+
 # Figures
+
 ```{r - figures}
 #Plot of mean growth for each land cover class and month
 mean_growth_anova_plot <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month, color = lc_name)) +
@@ -148,20 +193,26 @@ mean_growth_anova_plot_separate
 ```
 
 
+
 # Summary Table
 
-
-
-
-
 # Initial Analytical Application
-## Mean Growth
-To begin to understand if there is a relationship between time of year and which land cover types experience the fastest fires, we completed a two way ANOVA as well as Tukey's Honest Significant Differences. We also created two scatterplots to visualize these relationships, one with all land cover classes combined and one with them separated. The two way ANOVA indicated significance for the following land cover classes: Closed Shrublands (0.000000000247), Evergreen Needleleaf Forests (0.0000053), Grasslands (0.0000163), Open Shrublands (0.0000000128), Woody Savannas (0.000894), Savannas (0.002197), and Evergreen Broadleaf Forests (0.045657), as well as the following months: August (0.001385), July (0.031237), and October (0.019439). These results can also visually be seen seen in the scatterplots. 
 
+## Mean Growth
+
+To begin to understand if there is a relationship between time of year
+and which land cover types experience the fastest fires, we completed a
+two way ANOVA as well as Tukey's Honest Significant Differences. We also
+created two scatterplots to visualize these relationships, one with all
+land cover classes combined and one with them separated. The two way
+ANOVA indicated significance for the following land cover classes:
+Closed Shrublands (0.000000000247), Evergreen Needleleaf Forests
+(0.0000053), Grasslands (0.0000163), Open Shrublands (0.0000000128),
+Woody Savannas (0.000894), Savannas (0.002197), and Evergreen Broadleaf
+Forests (0.045657), as well as the following months: August (0.001385),
+July (0.031237), and October (0.019439). These results can also visually
+be seen seen in the scatterplots.
 
 # Central Question ANOVA
 
-
-
-```
-
+\`\`\`
