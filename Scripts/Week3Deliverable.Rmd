@@ -10,12 +10,12 @@ editor_options:
 ## Refined Questions and Analysis Choices
 
 #Central Question: - What is the relationship between temporal / land
-cover factors and fast fire events (high mean growth rate per event)
+#cover factors and fast fire events (high mean growth rate per event)
 
 #Supporting Questions: - What is the relationship between temporal /
-land cover factors and the longest fire events (duration). - Is there a
-relationship between land cover and maximum, mean, minimum daily fire
-growth per event.
+#land cover factors and the longest fire events (duration). - Is there a
+#relationship between land cover and maximum, mean, minimum daily fire
+#growth per event.
 
 # Observations and Variables
 
@@ -66,6 +66,7 @@ here()
 library(agricolae)
 library(lubridate)
 library(ggthemes)
+library(ggplot2)
 
 california_events_processed <- read_csv(here("Data/Processed/california_events_processed.csv"))
 
@@ -215,4 +216,116 @@ be seen seen in the scatterplots.
 
 # Central Question ANOVA
 
+
+
+###What is the relationship between land cover type and fire growth rate?
+
+##Response variables: max, mean and min daily growth per event
+##Predictor variable: Land cover
+
+```{r - data setup, ANOVA}
+#Load dplyr and make it so that there is only one row per fire event
+library(dplyr)
+fire_events <- california_events_processed |>
+  distinct(id, .keep_all = TRUE)
+#Make anova models for each with land cover type as the predictor variable
+max_model <- aov(mx_grw_km2 ~ lc_name, data = fire_events)
+min_model <- aov(mn_grw_km2 ~ lc_name, data = fire_events)
+mean_model <- aov(mu_grw_km2 ~ lc_name, data = fire_events)
+
+summary(max_model)
+summary(min_model)
+summary(mean_model)
+
+#Since Pr(>F)<.001 for each anova model, we will run a post hoc Tukey test to interpret this statistical difference
+TukeyHSD(max_model)
+TukeyHSD(mean_model)
+TukeyHSD(min_model)
+#Sorting the Tukey tests so they are more readable
+mean_sig <- as.data.frame(TukeyHSD(mean_model)$lc_name) |>
+  filter(`p adj` < 0.05) |>
+  arrange(`p adj`)
+
+min_sig <- as.data.frame(TukeyHSD(max_model)$lc_name) |>
+  filter(`p adj` < 0.05) |>
+  arrange(`p adj`)
+
+max_sig <- as.data.frame(TukeyHSD(min_model)$lc_name) |>
+  filter(`p adj` < 0.05) |>
+  arrange(`p adj`)
+
+mean_sig
+min_sig
+max_sig
+```
+#The most strongly recurring pattern is open shrubland's significantly high fire growth as compared to other land cover types.They have a significantly higher mean daily growth than Croplands, Barren, and Grasslands, a higher maximum daily growth than Croplands, Evergreen Needleleaf Forests, and Barren, and higher minimums than Croplands, Evergreen Needleleaf Forests, and Barren. Closed shrublands and evergreen needleleef forests also have relatively high mean and maximum daily growth levels, but not minima indicating that they might have relatively high growth during active periods but not throughout event duration. 
+
+```{r - graphics}
+#Load tidyr
+library(tidyr)
+
+#make dataframe with mean, sd for each of the three categories and pivot it 
+growth_summary <- fire_events |>
+  group_by(lc_name) |>
+  summarize(
+     max_growth = mean(mx_grw_km2, na.rm = TRUE),
+    mean_growth = mean(mu_grw_km2, na.rm = TRUE),
+    min_growth = mean(mn_grw_km2, na.rm = TRUE),
+    max_se = sd(mx_grw_km2, na.rm = TRUE) / sqrt(sum(!is.na(mx_grw_km2))),
+    mean_se = sd(mu_grw_km2, na.rm = TRUE) / sqrt(sum(!is.na(mu_grw_km2))),
+    min_se = sd(mn_grw_km2, na.rm = TRUE) / sqrt(sum(!is.na(mn_grw_km2))),
+    n = n(),
+    .groups = "drop"
+  )
+se_long <- growth_summary |>
+  pivot_longer(cols = c(max_se, mean_se, min_se),names_to = "metric",
+    values_to = "se")|>
+  mutate(metric = recode(metric,max_se = "max_growth",mean_se = "mean_growth",
+      min_se = "min_growth"))
+growth_long <- growth_summary |>
+  pivot_longer(cols = c(max_growth, mean_growth, min_growth),names_to = "metric",
+    values_to = "growth")
+growth_long <- growth_long |>
+  left_join(se_long, by = c("lc_name", "metric"))
+
+#Make graphic plotting max/mean/min fire growth rates across land cover types
+ggplot(growth_long, aes(x = growth, y = lc_name))+
+  geom_point(size = 2.5) +
+  geom_errorbar(aes(xmin = growth - 1.96 * se, xmax = growth + 1.96 * se), width = 0.2) +
+  facet_wrap(~metric, scales = "free_x") +
+  labs(x = "Daily fire growth (km²/day)",y = "Land cover type",
+       title = "Daily fire growth across land cover types")
+#Get tukey data ready for ggplot
+tukey_max <- TukeyHSD(max_model, "lc_name")$lc_name
+tukey_mean <- TukeyHSD(mean_model, "lc_name")$lc_name
+tukey_min <- TukeyHSD(min_model, "lc_name")$lc_name
+
+pair_map <- combn(landcover_levels, 2, simplify = FALSE) |>
+  map_dfr(\(x) {tibble(comparison = paste(x[2], x[1], sep = "-"),
+      landcover1 = x[2],landcover2 = x[1])})
+
+tukey_to_df <- function(x, metric) {
+  as.data.frame(x) |>
+    rownames_to_column("comparison") |>
+    left_join(pair_map, by = "comparison") |>
+    mutate(metric = metric,significant = `p adj` < 0.05)}
+
+tukey_all <- bind_rows(
+  tukey_to_df(tukey_max, "Maximum Growth"),
+  tukey_to_df(tukey_mean, "Mean Growth"),
+  tukey_to_df(tukey_min, "Minimum Growth"))
+
+ggplot(tukey_all, aes(x = landcover1, y = landcover2)) +
+  geom_tile(aes(fill = -log10(pmax(`p adj`, .Machine$double.xmin))),color = "white") +
+  geom_text(aes(label = ifelse(significant, "*", "")), size = 4) +
+  facet_wrap(~metric) +
+  coord_fixed() +
+  scale_fill_gradient(low = "white",high = "steelblue",name = "-log10 adjusted p") +
+  labs(x = "Land cover type",y = "Land cover type",
+    title = "Pairwise differences in fire growth across land cover types",
+    subtitle = "Asterisks indicate statistically significant Tukey comparisons"
+  ) +
+   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+         axis.text.y = element_text(size = 8),panel.grid = element_blank())
+```
 \`\`\`
