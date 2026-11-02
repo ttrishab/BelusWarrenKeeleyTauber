@@ -250,7 +250,7 @@ par(mfrow = c(1, 2))
 plot(mean_model_log, which = 1)
 plot(mean_model_log, which = 2)
 par(mfrow = c(1, 1))
-
+#Red flags are still there with the log transforms
 
 #Since Pr(>F)<.001 for each anova model, we will run a post hoc Tukey test to interpret this statistical difference
 TukeyHSD(max_model)
