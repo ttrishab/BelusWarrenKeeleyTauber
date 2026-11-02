@@ -223,6 +223,8 @@ be seen seen in the scatterplots.
 ##Response variables: max, mean and min daily growth per event
 ##Predictor variable: Land cover
 
+#We felt an ANOVA was the mosst appropriate to address this question because the response variables are continuous, the predictor is categorical, and individual fire events can be used as observational units.
+
 ```{r - data setup, ANOVA}
 #Load dplyr and make it so that there is only one row per fire event
 library(dplyr)
@@ -236,6 +238,19 @@ mean_model <- aov(mu_grw_km2 ~ lc_name, data = fire_events)
 summary(max_model)
 summary(min_model)
 summary(mean_model)
+
+#plot residuals vs. fitted values for the mean model as a diagnostic
+plot(mean_model, which = 1)
+#plot Q-Q plot as a diagnostic
+plot(mean_model, which = 2)
+#Both the Q-Q and the residual plots raise red flags. Maybe a log transform will help?
+mean_model_log <- aov(log1p(mu_grw_km2) ~ lc_name, data = fire_events)
+#Diagnostic test again
+par(mfrow = c(1, 2))
+plot(mean_model_log, which = 1)
+plot(mean_model_log, which = 2)
+par(mfrow = c(1, 1))
+
 
 #Since Pr(>F)<.001 for each anova model, we will run a post hoc Tukey test to interpret this statistical difference
 TukeyHSD(max_model)
