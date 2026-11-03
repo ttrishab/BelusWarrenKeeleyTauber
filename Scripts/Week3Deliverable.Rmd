@@ -1,9 +1,11 @@
 ---
 title: "Week3Deliverable"
-output: html_document
-editor_options: 
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
   chunk_output_type: console
-  markdown: 
+  markdown:
     wrap: 72
 ---
 
@@ -67,7 +69,6 @@ library(agricolae)
 library(lubridate)
 library(ggthemes)
 library(ggplot2)
-library(knitr)
 library(dplyr)
 library(gt)
 
@@ -162,9 +163,9 @@ mean_growth_anova_plot_separate
 
 ## What is the relationship between time of year and which land cover type sees the longest fast fires?
 
-### Response variable: event length. Predictors: land cover, month, year. 
+### Response variable: event length. Predictors: land cover, month, year.
 
-```{r}
+```{r - setting up data frame}
 # Group data
 event_length_group <- california_events_processed %>%
   group_by(lc_name, ig_month, ig_year) %>%
@@ -180,7 +181,8 @@ event_length <- california_events_processed %>%
 ```
 
 Two-way ANOVA
-```{r}
+
+```{r - 2way anova event duration}
 # Format as aov
 eventlength_aov <- aov(data = event_length, event_dur ~ ig_month + lc_name)
 summary(eventlength_aov) # The null hypothesis is that there is no difference in time of year or land cover type in their relationship to fast fire event length. P-values <.05 mean that the null hypothesis can be rejected and that there is a difference between at least two months and at least two land cover types. 
@@ -196,26 +198,57 @@ summary(eventlength_aov2)
 #The Multiple R-squared is 0.1053. The Adjusted R-squared is 0.1004. This means that these variables don't explain much of the variation, and more variables should be added to the model. 
 ```
 
-### 
+Figures 
+```{r - figures for event duration}
+event_dur_fig <- ggplot(event_length, 
+                        aes(y = event_dur, 
+                            x = ig_month, 
+                            #color = lc_name
+                            )
+                        )+
+  geom_boxplot(alpha = 0.9, 
+               size= 0.5, 
+               outlier.size = 0.3,
+               outlier.alpha = 0.7)+
+  labs(title = "Duration of Fire Events by Land Use Classes and Months",
+       x= "Month",
+       y="Fire Event Duration (days)"
+       )+
+  facet_wrap(vars(lc_name), ncol = 3)+
+  coord_cartesian(ylim = c(0, 50))
+  #theme(legend.position = "bottom", legend.size = 0.3)
+
+event_dur_fig
+
+
+# Count of events per month in a given year 
+
+
+```
+
 
 # Summary Table
 
-```{r}
+```{r - summary table}
 # Group data
 duration_table <- california_events_processed %>%
   group_by(lc_name) %>%
-  summarise(event_count = n(), 
+  summarise("Total Number of Fires" = n(), 
             "Max Duration (days)" = max(event_dur),
-            "Min Duration" = min(event_dur),
-            "Mean Duration" = mean(event_dur),
-            "Median Duration" = median(event_dur)) %>%
+            "Year (max dur)" = ig_year[which.max(event_dur)],
+            "Max Event Size (km2)" = max(tot_ar_km2),
+            "Year (max size)" = ig_year[which.max(tot_ar_km2)])%>%
+  rename("Land Cover Type" = lc_name) %>%
   ungroup()
 
-summary_duration <- gt(summary_table) %>%
+# formatting summary table 
+summary_duration <- gt(duration_table) %>% 
+  fmt_number(decimals = 0)%>% # rounding to a whole number
   tab_header(
-    title = "Fast Fires: Event Duration by Land Cover Type" )
+    title = "Fast Fires: Maximum Event Duration and Size by Land Cover Type (2000-2021)")
+  
+summary_duration
 ```
-
 
 # Initial Analytical Application
 
@@ -236,14 +269,16 @@ be seen seen in the scatterplots.
 
 # Central Question ANOVA
 
-
-
-###What is the relationship between land cover type and fire growth rate?
+###What is the relationship between land cover type and fire growth
+rate?
 
 ##Response variables: max, mean and min daily growth per event
 ##Predictor variable: Land cover
 
-#We felt an ANOVA was the mosst appropriate to address this question because the response variables are continuous, the predictor is categorical, and individual fire events can be used as observational units.
+#We felt an ANOVA was the mosst appropriate to address this question
+because the response variables are continuous, the predictor is
+categorical, and individual fire events can be used as observational
+units.
 
 ```{r - data setup, ANOVA}
 #Load dplyr and make it so that there is only one row per fire event
@@ -293,7 +328,17 @@ mean_sig
 min_sig
 max_sig
 ```
-#The most strongly recurring pattern is open shrubland's significantly high fire growth as compared to other land cover types.They have a significantly higher mean daily growth than Croplands, Barren, and Grasslands, a higher maximum daily growth than Croplands, Evergreen Needleleaf Forests, and Barren, and higher minimums than Croplands, Evergreen Needleleaf Forests, and Barren. Closed shrublands and evergreen needleleef forests also have relatively high mean and maximum daily growth levels, but not minima indicating that they might have relatively high growth during active periods but not throughout event duration. 
+
+#The most strongly recurring pattern is open shrubland's significantly
+high fire growth as compared to other land cover types.They have a
+significantly higher mean daily growth than Croplands, Barren, and
+Grasslands, a higher maximum daily growth than Croplands, Evergreen
+Needleleaf Forests, and Barren, and higher minimums than Croplands,
+Evergreen Needleleaf Forests, and Barren. Closed shrublands and
+evergreen needleleef forests also have relatively high mean and maximum
+daily growth levels, but not minima indicating that they might have
+relatively high growth during active periods but not throughout event
+duration.
 
 ```{r - graphics}
 #Load tidyr
@@ -363,4 +408,5 @@ ggplot(tukey_all, aes(x = landcover1, y = landcover2)) +
    theme(axis.text.x = element_text(angle = 45, hjust = 1), 
          axis.text.y = element_text(size = 8),panel.grid = element_blank())
 ```
+
 \`\`\`
