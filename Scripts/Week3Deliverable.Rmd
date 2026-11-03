@@ -159,6 +159,21 @@ mean_growth_anova_plot_separate <- ggplot(mean_growth, aes(y = mu_grw_km2, x = i
 mean_growth_anova_plot_separate
 ```
 
+###Analysis
+
+To begin to understand if there is a relationship between time of year
+and which land cover types experience the fastest fires, we completed a
+two way ANOVA as well as Tukey's Honest Significant Differences. We also
+created two scatterplots to visualize these relationships, one with all
+land cover classes combined and one with them separated. The two way
+ANOVA indicated significance for the following land cover classes:
+Closed Shrublands (0.000000000247), Evergreen Needleleaf Forests
+(0.0000053), Grasslands (0.0000163), Open Shrublands (0.0000000128),
+Woody Savannas (0.000894), Savannas (0.002197), and Evergreen Broadleaf
+Forests (0.045657), as well as the following months: August (0.001385),
+July (0.031237), and October (0.019439). These results can also visually
+be seen seen in the scatterplots.
+
 ## What is the relationship between time of year and which land cover type sees the longest fast fires?
 
 ### Response variable: event length. Predictors: land cover, month, year.
@@ -247,23 +262,6 @@ summary_duration <- gt(duration_table) %>%
   
 summary_duration
 ```
-
-# Initial Analytical Application
-
-## Mean Growth
-
-To begin to understand if there is a relationship between time of year
-and which land cover types experience the fastest fires, we completed a
-two way ANOVA as well as Tukey's Honest Significant Differences. We also
-created two scatterplots to visualize these relationships, one with all
-land cover classes combined and one with them separated. The two way
-ANOVA indicated significance for the following land cover classes:
-Closed Shrublands (0.000000000247), Evergreen Needleleaf Forests
-(0.0000053), Grasslands (0.0000163), Open Shrublands (0.0000000128),
-Woody Savannas (0.000894), Savannas (0.002197), and Evergreen Broadleaf
-Forests (0.045657), as well as the following months: August (0.001385),
-July (0.031237), and October (0.019439). These results can also visually
-be seen seen in the scatterplots.
 
 # Central Question ANOVA
 
