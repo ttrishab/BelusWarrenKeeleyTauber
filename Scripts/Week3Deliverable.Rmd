@@ -103,20 +103,14 @@ canva_pal("Birds and berries")
 
 ## What is the relationship between time of year and which land cover types see the fastest fires?
 
-### Response variable: mean growth; Predictors: land cover, month, year
+### Response variable: mean growth of fire per day; Predictors: land cover and month
 
-```{r - time of year, land cover type, mean growth two-way ANOVA}
-# Group data
-mean_growth_group <- california_events_processed %>%
-  group_by(lc_name, ig_month, ig_year) %>%
-  summarise(mean_growth_rate = mean(mu_grw_km2))
-
-#viewing the grouped data frame and commenting it out after
-#view(mean_growth_group)
+```{r - time of year, land cover type, mean growth two-way ANOVA and post-hoc test}
+#We chose to use two-way ANOVA to explore if the predictors of land cover and month may cause a variation in the response variable, mean growth of fire per day.
 
 # create new data frame of just question variables
 mean_growth <- california_events_processed %>%
-  select(lc_name, ig_month, ig_year, mu_grw_km2)
+  select(lc_name, ig_month, mu_grw_km2)
 
 #viewing the data frame of variables and commenting it out after
 #view(mean_growth)
@@ -171,16 +165,17 @@ mean_growth_anova_plot_separate
 
 To begin to understand if there is a relationship between time of year
 and which land cover types experience the fastest fires, we completed a
-two way ANOVA as well as Tukey's Honest Significant Differences. We also
-created two scatterplots to visualize these relationships, one with all
-land cover classes combined and one with them separated. The two way
-ANOVA indicated significance for the following land cover classes:
-Closed Shrublands (0.000000000247), Evergreen Needleleaf Forests
-(0.0000053), Grasslands (0.0000163), Open Shrublands (0.0000000128),
-Woody Savannas (0.000894), Savannas (0.002197), and Evergreen Broadleaf
-Forests (0.045657), as well as the following months: August (0.001385),
-July (0.031237), and October (0.019439). These results can also visually
-be seen seen in the scatterplots.
+two way ANOVA as well as Tukey's Honest Significant Differences. The null 
+hypothesis is that there is no difference between time of year or land cover type 
+with mean fire growth. P-values <.05 mean that the null hypothesis can be rejected. 
+
+Tukey's Honest Significant Differences showed significant difference in mean growth rate
+between the following land cover classes: Crops-Closed Shrubland (Closed Shrublands is higher, 0.00000004094677), Grasslands-Croplands (Grasslands is higher, 0.00000004328649), Closed Shrublands-Barren (Closed Shrublands is higher, 0.00000004836993), Open Shrublands-Croplands (Open Shrublands is higher, 0.0000005551389), Open Shrublands-Barren (Open Shrublands is higher, 0.0000009260920), Evergreen Needleleaf Forests-Croplands (Evergreen Needleleaf Forests is higher, 0.00003844067), Evergreen Needleleaf Forests-Barren (Evergreen Needleleaf Forests is higher, 0.000269493), Grasslands-Barren (Grasslands is higher, 0.0007389839), Grasslands-Closed Shrublands (Closed Shrublands is higher, 0.0009696893), Savannas-Closed Shrublands (Closed Shrublands is higher, 0.004432793), Woody Savannas-Closed Shrublands (Closed Shrublands is higher, 0.007075468), Woody Savannas-Barren (Woody Savannas is higher, 0.02862893), Open Shrublands-Grasslands (Open Shrublands is higher, 0.04108133), and Savannas-Barren (Savannas is higher, 0.04286845). Closed shrublands and open shrublands seem to be particularly significant in meant growth of fires based on these results.
+
+Additionally, Tukey's Honest Significant Differences showed significant difference in mean growth rate
+between the following months: August and January (August is higher, 0.0001989), July and February (July is higher, 0.0016073), August and February (August is higher, 0.0000019), July and March (July is higher, 0.0047414), August and March (August is higher, 0.0000127), July and April (July is higher, 0.0143088), August and April (August is higher, 0.0000339), July and May (July is higher, 0.0001859), August and May (August is higher, 0.0000001), July and June (July is higher, 0.0133577), August and June (August is higher, 0.0000031), November and July (July is higher, 0.0000337), September and August (August is higher, 0.0001458), October and August (August is higher, 0.0286293), November and August (August is higher, 0.0000000), December and August (August is higher, 0.0395852), and November and October (October is higher, 0.0341653). These results indicate that July and August are particulalry meaningful in the mean growth of fires. 
+
+Something to consider is this result from the linear mode: multiple R-squared is 0.05292 and adjusted R-squared is 0.04764, so these variables explain very little of the variation.  
 
 ## What is the relationship between time of year and which land cover type sees the longest fast fires?
 
