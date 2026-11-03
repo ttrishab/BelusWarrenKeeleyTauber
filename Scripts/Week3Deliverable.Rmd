@@ -67,6 +67,9 @@ library(agricolae)
 library(lubridate)
 library(ggthemes)
 library(ggplot2)
+library(knitr)
+library(dplyr)
+library(gt)
 
 california_events_processed <- read_csv(here("Data/Processed/california_events_processed.csv"))
 
@@ -99,7 +102,7 @@ theme_set(theme)
 canva_pal("Birds and berries")
 ```
 
-### What is the relationship between time of year and which land cover types see the fastest fires?
+## What is the relationship between time of year and which land cover types see the fastest fires?
 
 ### Response variable: mean growth; Predictors: land cover, month, year
 
@@ -132,43 +135,7 @@ TukeyHSD(mean_growth_aov2)
 
 ```
 
-## What is the relationship between time of year and which land cover type sees the longest fast fires?
-
-### Response variable: event length Predictors: land cover, month, year
-
-```{r}
-# Group data
-event_length_group <- california_events_processed %>%
-  group_by(lc_name, ig_month, ig_year) %>%
-  summarise(mean_event_dur = mean(event_dur),
-            max_event_dur = max(event_dur),
-            min_event_dur = min(event_dur)) %>%
-  ungroup()
-
-# create new data frame of just question variables
-event_length <- california_events_processed %>%
-  select(lc_name, ig_month, ig_year, event_dur)
-
-```
-
-Two-way ANOVA
-```{r}
-# Format as aov
-eventlength_aov <- aov(data = event_length, event_dur ~ ig_month + lc_name)
-summary(eventlength_aov) # the null hypothesis is that there is no difference in time of year or land cover type in their relationship to fast fire event length. p-values <.05 mean that the null hypothesis can be rejected and that there is a difference between at least two months and at least two land cover types. 
-
-# Run a post-hoc test for pairwise differences
-TukeyHSD(eventlength_aov)
-# There is a significant difference in fast fire event length between september and january (january is higher, p=0.0000328). There is a significant difference in fast fire event length between March and February (February is higher, p= 0.0439883). There is a significant difference in fast fire event length between September and February (February is higher, p= 0.0000000). Other months between which there are significant differences in event length are: april-march, may-march, november-march, july-april, august-april, september-april, july-may,august-may, spetember-may, october-may, july-june, september-june, september-july, november-july, september-august, november-august, october-september, november-september, december-september, november-october. Seems like september is consistenlty significantly different from the event lengths in other months?
-# There is a significant difference in event length between: Evergreen Needleleaf Forests-Closed Shrublands(*), Evergreen Broadleaf Forests-Croplands(*), Evergreen Needleleaf Forests-Croplands(*), Grasslands-Croplands(*), Grasslands(*)-Evergreen Needleleaf Forests, Open Shrublands(*)-Evergreen Needleleaf Forests, Permanent Wetlands(*)-Evergreen Needleleaf Forests, Savannas(*)-Evergreen Needleleaf Forests, Woody Savannas(*)-Evergreen Needleleaf Forests. (*) is next to the one that is higher. 
-
-# Format as lm
-eventlength_aov2 <- lm(data = event_length, event_dur ~ ig_month + lc_name)
-summary(eventlength_aov2)
-#The Multiple R-squared ia 0.1053. The Adjusted R-squared is 0.1004. This means that these variables don't explain much of the variation, and more variables should be added to the model. 
-```
-
-# Figures
+### Figures
 
 ```{r - figures}
 #Plot of mean growth for each land cover class and month
@@ -193,9 +160,62 @@ mean_growth_anova_plot_separate <- ggplot(mean_growth, aes(y = mu_grw_km2, x = i
 mean_growth_anova_plot_separate
 ```
 
+## What is the relationship between time of year and which land cover type sees the longest fast fires?
 
+### Response variable: event length. Predictors: land cover, month, year. 
+
+```{r}
+# Group data
+event_length_group <- california_events_processed %>%
+  group_by(lc_name, ig_month, ig_year) %>%
+  summarise(mean_event_dur = mean(event_dur),
+            max_event_dur = max(event_dur),
+            min_event_dur = min(event_dur)) %>%
+  ungroup()
+
+# create new data frame of just question variables
+event_length <- california_events_processed %>%
+  select(lc_name, ig_month, ig_year, event_dur)
+
+```
+
+Two-way ANOVA
+```{r}
+# Format as aov
+eventlength_aov <- aov(data = event_length, event_dur ~ ig_month + lc_name)
+summary(eventlength_aov) # The null hypothesis is that there is no difference in time of year or land cover type in their relationship to fast fire event length. P-values <.05 mean that the null hypothesis can be rejected and that there is a difference between at least two months and at least two land cover types. 
+
+# Run a post-hoc test to look for pairwise differences
+TukeyHSD(eventlength_aov)
+# There is a significant difference in fast fire event length between september and january (january is higher, p=0.0000328). There is a significant difference in fast fire event length between March and February (February is higher, p= 0.0439883). There is a significant difference in fast fire event length between September and February (February is higher, p= 0.0000000). Other months between which there are significant differences in event length are: april-march, may-march, november-march, july-april, august-april, september-april, july-may,august-may, spetember-may, october-may, july-june, september-june, september-july, november-july, september-august, november-august, october-september, november-september, december-september, november-october. Seems like september is consistently significantly different from the event lengths in other months?
+# There is a significant difference in event length between: Evergreen Needleleaf Forests-Closed Shrublands(*), Evergreen Broadleaf Forests-Croplands(*), Evergreen Needleleaf Forests-Croplands(*), Grasslands-Croplands(*), Grasslands(*)-Evergreen Needleleaf Forests, Open Shrublands(*)-Evergreen Needleleaf Forests, Permanent Wetlands(*)-Evergreen Needleleaf Forests, Savannas(*)-Evergreen Needleleaf Forests, Woody Savannas(*)-Evergreen Needleleaf Forests. (*) is next to the one that is higher. 
+
+# Format as lm
+eventlength_aov2 <- lm(data = event_length, event_dur ~ ig_month + lc_name)
+summary(eventlength_aov2)
+#The Multiple R-squared is 0.1053. The Adjusted R-squared is 0.1004. This means that these variables don't explain much of the variation, and more variables should be added to the model. 
+```
+
+### 
 
 # Summary Table
+
+```{r}
+# Group data
+duration_table <- california_events_processed %>%
+  group_by(lc_name) %>%
+  summarise(event_count = n(), 
+            "Max Duration (days)" = max(event_dur),
+            "Min Duration" = min(event_dur),
+            "Mean Duration" = mean(event_dur),
+            "Median Duration" = median(event_dur)) %>%
+  ungroup()
+
+summary_duration <- gt(summary_table) %>%
+  tab_header(
+    title = "Fast Fires: Event Duration by Land Cover Type" )
+```
+
 
 # Initial Analytical Application
 
