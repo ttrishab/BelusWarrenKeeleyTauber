@@ -132,12 +132,17 @@ summary(mean_growth_anova_2way2)
 # Run a post-hoc test for pairwise differences
 TukeyHSD(mean_growth_aov2)
 
+#Sorting the Tukey tests so they are more readable
+mean_growth_aov2_sort <- as.data.frame(TukeyHSD(mean_growth_aov2)$lc_name) |>
+  filter(`p adj` < 0.05) |>
+  arrange(`p adj`)
+
 ```
 
 ### Figures
 
 ```{r - figures}
-#Plot of mean growth for each land cover class and month
+#Plot of mean growth for each land cover class and month to address the question, "What is the relationship between time of year and which land cover types see the fastest fires?" The x-axis shows the month of the year and the y-axis shows the mean growth per day in km2.
 mean_growth_anova_plot <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month, color = lc_name)) +
   geom_boxplot() +
   geom_point(alpha = 0.5, size= 0.8) +
@@ -147,7 +152,9 @@ mean_growth_anova_plot <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month, 
 
 mean_growth_anova_plot
 
-#Plot of mean growth for each month separated by land cover class
+#Key finding: The mean growth per day seems to be in the late summer to fall (August - October).
+
+#Plot of mean growth for each month separated by land cover class to address the question, "What is the relationship between time of year and which land cover types see the fastest fires?" The x-axis shows the month of the year and the y-axis shows the mean growth per day in km2.
 mean_growth_anova_plot_separate <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month, color = lc_name)) +
   geom_boxplot() +
   geom_point(alpha = 0.5, size= 0.8) +
@@ -157,6 +164,7 @@ mean_growth_anova_plot_separate <- ggplot(mean_growth, aes(y = mu_grw_km2, x = i
        y="Mean Growth (km2)") 
 
 mean_growth_anova_plot_separate
+#Key finding: Land cover does make a difference in the fire growth per day. Water bodies, permanent wetlands, and permanent snow and ice see very modest mean fire growth per day while closed shrublands, everngreen needleleaf forests, grasslands, open shrublands, savannas, and woody savannas all have higher mean growth periods and greater variability based on time of year.
 ```
 
 ###Analysis
