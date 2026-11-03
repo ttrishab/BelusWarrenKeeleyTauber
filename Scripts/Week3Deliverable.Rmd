@@ -11,13 +11,15 @@ editor_options:
 
 ## Refined Questions and Analysis Choices
 
-#Central Question: - What is the relationship between temporal / land
-#cover factors and fast fire events (high mean growth rate per event)
+# Central Question:
+What is the relationship between temporal / land cover factors and fast fire
+events (high mean growth rate per event)?
 
-#Supporting Questions: - What is the relationship between temporal /
-#land cover factors and the longest fire events (duration). - Is there a
-#relationship between land cover and maximum, mean, minimum daily fire
-#growth per event.
+#Supporting Questions:
+What is the relationship between temporal /land cover factors and the
+longest fire events (duration)?
+Is there a relationship between land cover and maximum, mean, minimum daily fire
+growth per event?
 
 # Observations and Variables
 
@@ -28,10 +30,6 @@ in the event
 
 Variable: ig_year Description: The year of the earliest date contained
 in the event.
-
-Variable: fsr_km2_dy Description: Total kilometers burned for the entire
-event divided by the duration of the fire event. (\*\*\*use this as
-response variable for central question???)
 
 Variable: event_dur Description: Duration of the event in days
 
@@ -51,7 +49,7 @@ from the year before the fire.
 
 An intended comparison is the central question and first supporting
 question. Addressing whether the temporal / land factors are
-contributing more to the growth rate of the fire events or the duration
+contributing more to the mean growth rate of the fire events or the duration
 of the fire event.
 
 There are no unresolved data limitations, since there are no gaps for
@@ -269,8 +267,7 @@ be seen seen in the scatterplots.
 
 # Central Question ANOVA
 
-###What is the relationship between land cover type and fire growth
-rate?
+###What is the relationship between land cover type and fire growth rate?
 
 ##Response variables: max, mean and min daily growth per event
 ##Predictor variable: Land cover
@@ -339,7 +336,7 @@ Grasslands, a higher maximum daily growth than Croplands, Evergreen
 Needleleaf Forests, and Barren, and higher minimums than Croplands,
 Evergreen Needleleaf Forests, and Barren. Closed shrublands and
 evergreen needleleef forests also have relatively high mean and maximum
-daily growth levels, but not minima indicating that they might have
+daily growth levels, but not minimum indicating that they might have
 relatively high growth during active periods but not throughout event
 duration.
 
