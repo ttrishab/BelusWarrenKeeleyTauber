@@ -250,7 +250,8 @@ duration_table <- california_events_processed %>%
             "Max Duration (days)" = max(event_dur),
             "Year (max dur)" = ig_year[which.max(event_dur)],
             "Max Event Size (km2)" = max(tot_ar_km2),
-            "Year (max size)" = ig_year[which.max(tot_ar_km2)])%>%
+            "Year (max size)" = ig_year[which.max(tot_ar_km2)],
+            "Mean Growth (km2/day)" = mean(mx_grw_km2))%>%
   rename("Land Cover Type" = lc_name) %>%
   ungroup()
 
