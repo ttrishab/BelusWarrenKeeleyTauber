@@ -375,38 +375,7 @@ ggplot(growth_long, aes(x = growth, y = lc_name))+
   facet_wrap(~metric, scales = "free_x") +
   labs(x = "Daily fire growth (km²/day)",y = "Land cover type",
        title = "Daily fire growth across land cover types")
-#Get tukey data ready for ggplot
-tukey_max <- TukeyHSD(max_model, "lc_name")$lc_name
-tukey_mean <- TukeyHSD(mean_model, "lc_name")$lc_name
-tukey_min <- TukeyHSD(min_model, "lc_name")$lc_name
 
-pair_map <- combn(landcover_levels, 2, simplify = FALSE) |>
-  map_dfr(\(x) {tibble(comparison = paste(x[2], x[1], sep = "-"),
-      landcover1 = x[2],landcover2 = x[1])})
-
-tukey_to_df <- function(x, metric) {
-  as.data.frame(x) |>
-    rownames_to_column("comparison") |>
-    left_join(pair_map, by = "comparison") |>
-    mutate(metric = metric,significant = `p adj` < 0.05)}
-
-tukey_all <- bind_rows(
-  tukey_to_df(tukey_max, "Maximum Growth"),
-  tukey_to_df(tukey_mean, "Mean Growth"),
-  tukey_to_df(tukey_min, "Minimum Growth"))
-
-ggplot(tukey_all, aes(x = landcover1, y = landcover2)) +
-  geom_tile(aes(fill = -log10(pmax(`p adj`, .Machine$double.xmin))),color = "white") +
-  geom_text(aes(label = ifelse(significant, "*", "")), size = 4) +
-  facet_wrap(~metric) +
-  coord_fixed() +
-  scale_fill_gradient(low = "white",high = "steelblue",name = "-log10 adjusted p") +
-  labs(x = "Land cover type",y = "Land cover type",
-    title = "Pairwise differences in fire growth across land cover types",
-    subtitle = "Asterisks indicate statistically significant Tukey comparisons"
-  ) +
-   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-         axis.text.y = element_text(size = 8),panel.grid = element_blank())
 ```
 
 \`\`\`
