@@ -1,0 +1,383 @@
+---
+title: "Week3Deliverable"
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: console
+  markdown:
+    wrap: 72
+---
+
+## Refined Questions and Analysis Choices
+
+# Central Question:
+What is the relationship between temporal / land cover factors and fast fire
+events (high mean growth rate per event)?
+
+#Supporting Questions:
+What is the relationship between temporal /land cover factors and the
+longest fire events (duration)?
+Is there a relationship between land cover and maximum, mean, minimum daily fire
+growth per event?
+
+# Observations and Variables
+
+There are a total of 4329 observations (fire events) available to use
+
+Variable: ig_month Description: The month of the earliest date contained
+in the event
+
+Variable: ig_year Description: The year of the earliest date contained
+in the event.
+
+Variable: event_dur Description: Duration of the event in days
+
+Variable: mx_grw_km2 Description: Maximum daily fire growth per event in
+square kilometers
+
+Variable: mn_grw_km2 Description: Minimum daily fire growth per event in
+square kilometers
+
+Variable: mu_grw_km2 Description: Mean daily fire growth per event in
+square kilometers
+
+Variable: lc_name Description: Character string of the landcover type
+from the year before the fire.
+
+# Intended Comparison / Unresolved Data Limitations
+
+An intended comparison is the central question and first supporting
+question. Addressing whether the temporal / land factors are
+contributing more to the mean growth rate of the fire events or the duration
+of the fire event.
+
+There are no unresolved data limitations, since there are no gaps for
+the intended variables.
+
+## Purposeful Explanatory Evidence
+
+```{r setup, message=FALSE}
+#Loading packages and setting working directory
+library(tidyverse)
+library(here)
+here()
+#install.packages("agricolae")
+library(agricolae)
+library(lubridate)
+library(ggthemes)
+library(ggplot2)
+library(dplyr)
+library(gt)
+
+california_events_processed <- read_csv(here("Data/Processed/california_events_processed.csv"))
+
+# Changing lc_name variable from character to factor
+california_events_processed$lc_name <- as.factor(california_events_processed$lc_name)
+
+# Changing eco_name variable from character to factor
+california_events_processed$eco_name <- as.factor(california_events_processed$eco_name)
+
+# changing month to factor format
+california_events_processed$ig_month <- as.factor(california_events_processed$ig_month)
+
+#changing year to factor format
+california_events_processed$ig_year <- as.factor(california_events_processed$ig_year)
+
+#creating the theme
+theme <- theme_bw() +
+  #making the title bold, 13 font, and centered
+  theme(plot.title = element_text(face = "bold", size = 10, hjust = 0.5),
+       #making my axis titles bold and 10 font
+         axis.title = element_text(face = "bold", size = 10),
+       #positioning my legend on the right side of the plot 
+       legend.position = "right"
+  )
+
+#setting the theme
+theme_set(theme)
+
+#Establishing the color palette
+canva_pal("Birds and berries")
+```
+
+## What is the relationship between time of year and which land cover types see the fastest fires?
+
+### Response variable: mean growth of fire per day; Predictors: land cover and month
+
+```{r - time of year, land cover type, mean growth two-way ANOVA and post-hoc test}
+#We chose to use two-way ANOVA to explore if the predictors of land cover and month may cause a variation in the response variable, mean growth of fire per day.
+
+# create new data frame of just question variables
+mean_growth <- california_events_processed %>%
+  select(lc_name, ig_month, mu_grw_km2)
+
+#viewing the data frame of variables and commenting it out after
+#view(mean_growth)
+
+# Format as aov
+mean_growth_aov2 <- aov(data = mean_growth, mu_grw_km2 ~ ig_month + lc_name)
+summary(mean_growth_aov2)
+
+# Format as lm
+mean_growth_anova_2way2 <- lm(data = mean_growth, mu_grw_km2 ~ ig_month + lc_name)
+summary(mean_growth_anova_2way2)
+
+# Run a post-hoc test for pairwise differences
+TukeyHSD(mean_growth_aov2)
+
+#Sorting the Tukey tests so they are more readable
+mean_growth_aov2_sort <- as.data.frame(TukeyHSD(mean_growth_aov2)$lc_name) |>
+  filter(`p adj` < 0.05) |>
+  arrange(`p adj`)
+
+```
+
+### Figures
+
+```{r - figures}
+#Plot of mean growth for each land cover class and month to address the question, "What is the relationship between time of year and which land cover types see the fastest fires?" The x-axis shows the month of the year and the y-axis shows the mean growth per day in km2.
+mean_growth_anova_plot <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month, color = lc_name)) +
+  geom_boxplot() +
+  geom_point(alpha = 0.5, size= 0.8) +
+  labs(title = "Mean Growth of Wildfires across Land Use Classes and Months",
+       x= "Month",
+       y="Mean Growth (km2)") 
+
+mean_growth_anova_plot
+
+#Key finding: The mean growth per day seems to be in the late summer to fall (August - October).
+
+#Plot of mean growth for each month separated by land cover class to address the question, "What is the relationship between time of year and which land cover types see the fastest fires?" The x-axis shows the month of the year and the y-axis shows the mean growth per day in km2.
+mean_growth_anova_plot_separate <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month, color = lc_name)) +
+  geom_boxplot() +
+  geom_point(alpha = 0.5, size= 0.8) +
+  facet_wrap(vars(lc_name)) +
+  labs(title = "Mean Growth of Wildfires across Land Use Classes and Months",
+       x= "Month",
+       y="Mean Growth (km2)") 
+
+mean_growth_anova_plot_separate
+#Key finding: Land cover does make a difference in the fire growth per day. Water bodies, permanent wetlands, and permanent snow and ice see very modest mean fire growth per day while closed shrublands, everngreen needleleaf forests, grasslands, open shrublands, savannas, and woody savannas all have higher mean growth periods and greater variability based on time of year.
+```
+
+###Analysis
+
+To begin to understand if there is a relationship between time of year
+and which land cover types experience the fastest fires, we completed a
+two way ANOVA as well as Tukey's Honest Significant Differences. The null 
+hypothesis is that there is no difference between time of year or land cover type 
+with mean fire growth. P-values <.05 mean that the null hypothesis can be rejected. 
+
+Tukey's Honest Significant Differences showed significant difference in mean growth rate
+between the following land cover classes: Crops-Closed Shrubland (Closed Shrublands is higher, 0.00000004094677), Grasslands-Croplands (Grasslands is higher, 0.00000004328649), Closed Shrublands-Barren (Closed Shrublands is higher, 0.00000004836993), Open Shrublands-Croplands (Open Shrublands is higher, 0.0000005551389), Open Shrublands-Barren (Open Shrublands is higher, 0.0000009260920), Evergreen Needleleaf Forests-Croplands (Evergreen Needleleaf Forests is higher, 0.00003844067), Evergreen Needleleaf Forests-Barren (Evergreen Needleleaf Forests is higher, 0.000269493), Grasslands-Barren (Grasslands is higher, 0.0007389839), Grasslands-Closed Shrublands (Closed Shrublands is higher, 0.0009696893), Savannas-Closed Shrublands (Closed Shrublands is higher, 0.004432793), Woody Savannas-Closed Shrublands (Closed Shrublands is higher, 0.007075468), Woody Savannas-Barren (Woody Savannas is higher, 0.02862893), Open Shrublands-Grasslands (Open Shrublands is higher, 0.04108133), and Savannas-Barren (Savannas is higher, 0.04286845). Closed shrublands and open shrublands seem to be particularly significant in meant growth of fires based on these results.
+
+Additionally, Tukey's Honest Significant Differences showed significant difference in mean growth rate
+between the following months: August and January (August is higher, 0.0001989), July and February (July is higher, 0.0016073), August and February (August is higher, 0.0000019), July and March (July is higher, 0.0047414), August and March (August is higher, 0.0000127), July and April (July is higher, 0.0143088), August and April (August is higher, 0.0000339), July and May (July is higher, 0.0001859), August and May (August is higher, 0.0000001), July and June (July is higher, 0.0133577), August and June (August is higher, 0.0000031), November and July (July is higher, 0.0000337), September and August (August is higher, 0.0001458), October and August (August is higher, 0.0286293), November and August (August is higher, 0.0000000), December and August (August is higher, 0.0395852), and November and October (October is higher, 0.0341653). These results indicate that July and August are particulalry meaningful in the mean growth of fires. 
+
+Something to consider is this result from the linear mode: multiple R-squared is 0.05292 and adjusted R-squared is 0.04764, so these variables explain very little of the variation.  
+
+## What is the relationship between time of year and which land cover type sees the longest fast fires?
+
+### Response variable: event length. Predictors: land cover, month, year.
+
+```{r - setting up data frame}
+# Group data
+event_length_group <- california_events_processed %>%
+  group_by(lc_name, ig_month, ig_year) %>%
+  summarise(mean_event_dur = mean(event_dur),
+            max_event_dur = max(event_dur),
+            min_event_dur = min(event_dur)) %>%
+  ungroup()
+
+# create new data frame of just question variables
+event_length <- california_events_processed %>%
+  select(lc_name, ig_month, ig_year, event_dur)
+
+```
+
+Two-way ANOVA
+
+```{r - 2way anova event duration}
+# Format as aov
+eventlength_aov <- aov(data = event_length, event_dur ~ ig_month + lc_name)
+summary(eventlength_aov) # The null hypothesis is that there is no difference in time of year or land cover type in their relationship to fast fire event length. P-values <.05 mean that the null hypothesis can be rejected and that there is a difference between at least two months and at least two land cover types. 
+
+# Run a post-hoc test to look for pairwise differences
+TukeyHSD(eventlength_aov)
+# There is a significant difference in fast fire event length between september and january (january is higher, p=0.0000328). There is a significant difference in fast fire event length between March and February (February is higher, p= 0.0439883). There is a significant difference in fast fire event length between September and February (February is higher, p= 0.0000000). Other months between which there are significant differences in event length are: april-march, may-march, november-march, july-april, august-april, september-april, july-may,august-may, spetember-may, october-may, july-june, september-june, september-july, november-july, september-august, november-august, october-september, november-september, december-september, november-october. Seems like september is consistently significantly different from the event lengths in other months?
+# There is a significant difference in event length between: Evergreen Needleleaf Forests-Closed Shrublands(*), Evergreen Broadleaf Forests-Croplands(*), Evergreen Needleleaf Forests-Croplands(*), Grasslands-Croplands(*), Grasslands(*)-Evergreen Needleleaf Forests, Open Shrublands(*)-Evergreen Needleleaf Forests, Permanent Wetlands(*)-Evergreen Needleleaf Forests, Savannas(*)-Evergreen Needleleaf Forests, Woody Savannas(*)-Evergreen Needleleaf Forests. (*) is next to the one that is higher. 
+
+# Format as lm
+eventlength_aov2 <- lm(data = event_length, event_dur ~ ig_month + lc_name)
+summary(eventlength_aov2)
+#The Multiple R-squared is 0.1053. The Adjusted R-squared is 0.1004. This means that these variables don't explain much of the variation, and more variables should be added to the model. 
+```
+
+Figures 
+```{r - figures for event duration}
+event_dur_fig <- ggplot(event_length, 
+                        aes(y = event_dur, 
+                            x = ig_month, 
+                            #color = lc_name
+                            )
+                        )+
+  geom_boxplot(alpha = 0.9, 
+               size= 0.5, 
+               outlier.size = 0.3,
+               outlier.alpha = 0.7)+
+  labs(title = "Duration of Fire Events by Land Use Classes and Months",
+       x= "Month",
+       y="Fire Event Duration (days)"
+       )+
+  facet_wrap(vars(lc_name), ncol = 3)+
+  coord_cartesian(ylim = c(0, 50))
+  #theme(legend.position = "bottom", legend.size = 0.3)
+
+event_dur_fig
+
+
+# Count of events per month in a given year 
+
+
+```
+
+
+# Summary Table
+
+```{r - summary table}
+# Group data
+duration_table <- california_events_processed %>%
+  group_by(lc_name) %>%
+  summarise("Total Number of Fires" = n(), 
+            "Max Duration (days)" = max(event_dur),
+            "Year (max dur)" = ig_year[which.max(event_dur)],
+            "Max Event Size (km2)" = max(tot_ar_km2),
+            "Year (max size)" = ig_year[which.max(tot_ar_km2)],
+            "Mean Growth (km2/day)" = mean(mx_grw_km2))%>%
+  rename("Land Cover Type" = lc_name) %>%
+  ungroup()
+
+# formatting summary table 
+summary_duration <- gt(duration_table) %>% 
+  fmt_number(decimals = 0)%>% # rounding to a whole number
+  tab_header(
+    title = "Fast Fires: Maximum Event Duration and Size by Land Cover Type (2000-2021)")
+  
+summary_duration
+```
+
+# Central Question ANOVA
+
+###What is the relationship between land cover type and fire growth rate?
+
+##Response variables: max, mean and min daily growth per event
+##Predictor variable: Land cover
+
+#We felt an ANOVA was the mosst appropriate to address this question
+because the response variables are continuous, the predictor is
+categorical, and individual fire events can be used as observational
+units.
+
+```{r - data setup, ANOVA}
+#Load dplyr and make it so that there is only one row per fire event
+library(dplyr)
+fire_events <- california_events_processed |>
+  distinct(id, .keep_all = TRUE)
+#Make anova models for each with land cover type as the predictor variable
+max_model <- aov(mx_grw_km2 ~ lc_name, data = fire_events)
+min_model <- aov(mn_grw_km2 ~ lc_name, data = fire_events)
+mean_model <- aov(mu_grw_km2 ~ lc_name, data = fire_events)
+
+anova_summary <- data.frame(Metric = c("Maximum", "Mean", "Minimum"),
+  F_value = c(summary(max_model)[[1]]["lc_name", "F value"],
+    summary(mean_model)[[1]]["lc_name", "F value"],
+    summary(min_model)[[1]]["lc_name", "F value"]),
+  p_value = c(summary(max_model)[[1]]["lc_name", "Pr(>F)"],
+    summary(mean_model)[[1]]["lc_name", "Pr(>F)"],
+    summary(min_model)[[1]]["lc_name", "Pr(>F)"]))
+anova_summary 
+#plot residuals vs. fitted values for the mean model as a diagnostic
+plot(mean_model, which = 1)
+#plot Q-Q plot as a diagnostic
+plot(mean_model, which = 2)
+#Both the Q-Q and the residual plots raise red flags. Maybe a log transform will help?
+mean_model_log <- aov(log1p(mu_grw_km2) ~ lc_name, data = fire_events)
+#Diagnostic test again
+par(mfrow = c(1, 2))
+plot(mean_model_log, which = 1)
+plot(mean_model_log, which = 2)
+#Red flags are still there with the log transforms
+
+#Since Pr(>F)<.001 for each anova model, we will run a post hoc Tukey test to interpret this statistical difference
+TukeyHSD(max_model)
+TukeyHSD(mean_model)
+TukeyHSD(min_model)
+#Sorting the Tukey tests so they are more readable
+mean_sig <- as.data.frame(TukeyHSD(mean_model)$lc_name) |>
+  filter(`p adj` < 0.05) |>
+  arrange(`p adj`)
+
+min_sig <- as.data.frame(TukeyHSD(max_model)$lc_name) |>
+  filter(`p adj` < 0.05) |>
+  arrange(`p adj`)
+
+max_sig <- as.data.frame(TukeyHSD(min_model)$lc_name) |>
+  filter(`p adj` < 0.05) |>
+  arrange(`p adj`)
+
+tukey_summary <- data.frame(Metric = c("Maximum", "Mean", "Minimum"),
+  Significant_comparisons = c(nrow(max_sig), nrow(mean_sig), nrow(min_sig)))
+tukey_summary
+```
+
+#The most strongly recurring pattern is open shrubland's significantly
+high fire growth as compared to other land cover types.They have a
+significantly higher mean daily growth than Croplands, Barren, and
+Grasslands, a higher maximum daily growth than Croplands, Evergreen
+Needleleaf Forests, and Barren, and higher minimums than Croplands,
+Evergreen Needleleaf Forests, and Barren. Closed shrublands and
+evergreen needleleef forests also have relatively high mean and maximum
+daily growth levels, but not minimum indicating that they might have
+relatively high growth during active periods but not throughout event
+duration.
+
+```{r - graphics}
+#Load tidyr
+library(tidyr)
+
+#make dataframe with mean, sd for each of the three categories and pivot it 
+growth_summary <- fire_events |>
+  group_by(lc_name) |>
+  summarize(
+     max_growth = mean(mx_grw_km2, na.rm = TRUE),
+    mean_growth = mean(mu_grw_km2, na.rm = TRUE),
+    min_growth = mean(mn_grw_km2, na.rm = TRUE),
+    max_se = sd(mx_grw_km2, na.rm = TRUE) / sqrt(sum(!is.na(mx_grw_km2))),
+    mean_se = sd(mu_grw_km2, na.rm = TRUE) / sqrt(sum(!is.na(mu_grw_km2))),
+    min_se = sd(mn_grw_km2, na.rm = TRUE) / sqrt(sum(!is.na(mn_grw_km2))),
+    n = n(),
+    .groups = "drop"
+  )
+se_long <- growth_summary |>
+  pivot_longer(cols = c(max_se, mean_se, min_se),names_to = "metric",
+    values_to = "se")|>
+  mutate(metric = recode(metric,max_se = "max_growth",mean_se = "mean_growth",
+      min_se = "min_growth"))
+growth_long <- growth_summary |>
+  pivot_longer(cols = c(max_growth, mean_growth, min_growth),names_to = "metric",
+    values_to = "growth")
+growth_long <- growth_long |>
+  left_join(se_long, by = c("lc_name", "metric"))
+
+#Make graphic plotting max/mean/min fire growth rates across land cover types
+ggplot(growth_long, aes(x = growth, y = lc_name))+
+  geom_point(size = 2.5) +
+  geom_errorbar(aes(xmin = growth - 1.96 * se, xmax = growth + 1.96 * se), width = 0.2) +
+  facet_wrap(~metric, scales = "free_x") +
+  labs(x = "Daily fire growth (km²/day)",y = "Land cover type",
+       title = "Daily fire growth across land cover types")
+
+```
+#This graphic plots daily fire growth on the X axis and land cover type per event on the X axis. As mentioned before, open shrubland's relatively high growth levels jumps out, especially given its significance after running the anova and tukey tests. Closed shrubland and evergreen needleleaf forests also have relatively high means. Some land cover types not mentioned earlier, like evergreen broadleaf forests and urban/built up lands also visually jump out as having possibly higher growth rates, but they were not found to be statistically significant after the Tukey tests, which is visible given the extremely high spread for both units.That represents one limitation of this figure - we felt it was important to include results for all of the land cover types so that the reader could parse all the data, but not all of them were statistically significant. The primary takeaway from this figure and the associated tables up above is to possibly take a deeper dive into open shrubland fire growth specifically, perhaps running some of the above tests filtered to examine only open shrubland.
+\`\`\`
