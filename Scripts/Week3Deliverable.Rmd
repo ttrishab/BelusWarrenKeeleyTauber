@@ -290,10 +290,14 @@ max_model <- aov(mx_grw_km2 ~ lc_name, data = fire_events)
 min_model <- aov(mn_grw_km2 ~ lc_name, data = fire_events)
 mean_model <- aov(mu_grw_km2 ~ lc_name, data = fire_events)
 
-summary(max_model)
-summary(min_model)
-summary(mean_model)
-
+anova_summary <- data.frame(Metric = c("Maximum", "Mean", "Minimum"),
+  F_value = c(summary(max_model)[[1]]["lc_name", "F value"],
+    summary(mean_model)[[1]]["lc_name", "F value"],
+    summary(min_model)[[1]]["lc_name", "F value"]),
+  p_value = c(summary(max_model)[[1]]["lc_name", "Pr(>F)"],
+    summary(mean_model)[[1]]["lc_name", "Pr(>F)"],
+    summary(min_model)[[1]]["lc_name", "Pr(>F)"]))
+anova_summary 
 #plot residuals vs. fitted values for the mean model as a diagnostic
 plot(mean_model, which = 1)
 #plot Q-Q plot as a diagnostic
@@ -304,7 +308,6 @@ mean_model_log <- aov(log1p(mu_grw_km2) ~ lc_name, data = fire_events)
 par(mfrow = c(1, 2))
 plot(mean_model_log, which = 1)
 plot(mean_model_log, which = 2)
-par(mfrow = c(1, 1))
 #Red flags are still there with the log transforms
 
 #Since Pr(>F)<.001 for each anova model, we will run a post hoc Tukey test to interpret this statistical difference
@@ -324,9 +327,9 @@ max_sig <- as.data.frame(TukeyHSD(min_model)$lc_name) |>
   filter(`p adj` < 0.05) |>
   arrange(`p adj`)
 
-mean_sig
-min_sig
-max_sig
+tukey_summary <- data.frame(Metric = c("Maximum", "Mean", "Minimum"),
+  Significant_comparisons = c(nrow(max_sig), nrow(mean_sig), nrow(min_sig)))
+tukey_summary
 ```
 
 #The most strongly recurring pattern is open shrubland's significantly
