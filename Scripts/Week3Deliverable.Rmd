@@ -57,7 +57,7 @@ the intended variables.
 
 ## Purposeful Explanatory Evidence
 
-```{r setup, message=FALSE}
+```{r setup, warning = FALSE, message=FALSE}
 #Loading packages and setting working directory
 library(tidyverse)
 library(here)
@@ -106,7 +106,8 @@ canva_pal("Birds and berries")
 ### Response variable: mean growth of fire per day; Predictors: land cover and month
 
 ```{r - time of year, land cover type, mean growth two-way ANOVA and post-hoc test}
-#We chose to use two-way ANOVA to explore if the predictors of land cover and month may cause a variation in the response variable, mean growth of fire per day.
+#We chose to use two-way ANOVA to explore if the predictors of land cover and month may cause
+#a variation in the response variable, mean growth of fire per day.
 
 # create new data frame of just question variables
 mean_growth <- california_events_processed %>%
@@ -136,8 +137,12 @@ mean_growth_aov2_sort <- as.data.frame(TukeyHSD(mean_growth_aov2)$lc_name) |>
 ### Figures
 
 ```{r - figures}
-#Plot of mean growth for each land cover class and month to address the question, "What is the relationship between time of year and which land cover types see the fastest fires?" The x-axis shows the month of the year and the y-axis shows the mean growth per day in km2.
-mean_growth_anova_plot <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month, color = lc_name)) +
+#Plot of mean growth for each land cover class and month to address the question, 
+#"What is the relationship between time of year and which land cover types see the 
+#fastest fires?" The x-axis shows the month of the year and the y-axis shows the 
+#mean growth per day in km2.
+mean_growth_anova_plot <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month, 
+                                                  color = lc_name)) +
   geom_boxplot() +
   geom_point(alpha = 0.5, size= 0.8) +
   labs(title = "Mean Growth of Wildfires across Land Use Classes and Months",
@@ -148,8 +153,12 @@ mean_growth_anova_plot
 
 #Key finding: The mean growth per day seems to be in the late summer to fall (August - October).
 
-#Plot of mean growth for each month separated by land cover class to address the question, "What is the relationship between time of year and which land cover types see the fastest fires?" The x-axis shows the month of the year and the y-axis shows the mean growth per day in km2.
-mean_growth_anova_plot_separate <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month, color = lc_name)) +
+#Plot of mean growth for each month separated by land cover class to address the question, 
+#"What is the relationship between time of year and which land cover types see the fastest 
+#fires?" The x-axis shows the month of the year and the y-axis shows the mean growth per 
+#day in km2.
+mean_growth_anova_plot_separate <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month, 
+                                                           color = lc_name)) +
   geom_boxplot() +
   geom_point(alpha = 0.5, size= 0.8) +
   facet_wrap(vars(lc_name)) +
@@ -158,7 +167,11 @@ mean_growth_anova_plot_separate <- ggplot(mean_growth, aes(y = mu_grw_km2, x = i
        y="Mean Growth (km2)") 
 
 mean_growth_anova_plot_separate
-#Key finding: Land cover does make a difference in the fire growth per day. Water bodies, permanent wetlands, and permanent snow and ice see very modest mean fire growth per day while closed shrublands, everngreen needleleaf forests, grasslands, open shrublands, savannas, and woody savannas all have higher mean growth periods and greater variability based on time of year.
+#Key finding: Land cover does make a difference in the fire growth per day. Water bodies, 
+#permanent wetlands, and permanent snow and ice see very modest mean fire growth per day 
+#while closed shrublands, evergreen needleleaf forests, grasslands, open shrublands, 
+#savannas, and woody savannas all have higher mean growth periods and greater variability
+#based on time of year.
 ```
 
 ###Analysis
@@ -170,12 +183,36 @@ hypothesis is that there is no difference between time of year or land cover typ
 with mean fire growth. P-values <.05 mean that the null hypothesis can be rejected. 
 
 Tukey's Honest Significant Differences showed significant difference in mean growth rate
-between the following land cover classes: Crops-Closed Shrubland (Closed Shrublands is higher, 0.00000004094677), Grasslands-Croplands (Grasslands is higher, 0.00000004328649), Closed Shrublands-Barren (Closed Shrublands is higher, 0.00000004836993), Open Shrublands-Croplands (Open Shrublands is higher, 0.0000005551389), Open Shrublands-Barren (Open Shrublands is higher, 0.0000009260920), Evergreen Needleleaf Forests-Croplands (Evergreen Needleleaf Forests is higher, 0.00003844067), Evergreen Needleleaf Forests-Barren (Evergreen Needleleaf Forests is higher, 0.000269493), Grasslands-Barren (Grasslands is higher, 0.0007389839), Grasslands-Closed Shrublands (Closed Shrublands is higher, 0.0009696893), Savannas-Closed Shrublands (Closed Shrublands is higher, 0.004432793), Woody Savannas-Closed Shrublands (Closed Shrublands is higher, 0.007075468), Woody Savannas-Barren (Woody Savannas is higher, 0.02862893), Open Shrublands-Grasslands (Open Shrublands is higher, 0.04108133), and Savannas-Barren (Savannas is higher, 0.04286845). Closed shrublands and open shrublands seem to be particularly significant in meant growth of fires based on these results.
+between the following land cover classes: Crops-Closed Shrubland (Closed Shrublands is 
+higher, 0.00000004094677), Grasslands-Croplands (Grasslands is higher, 0.00000004328649), 
+Closed Shrublands-Barren (Closed Shrublands is higher, 0.00000004836993), Open 
+Shrublands-Croplands (Open Shrublands is higher, 0.0000005551389), Open Shrublands-Barren
+(Open Shrublands is higher, 0.0000009260920), Evergreen Needleleaf Forests-Croplands
+(Evergreen Needleleaf Forests is higher, 0.00003844067), Evergreen Needleleaf Forests-Barren
+(Evergreen Needleleaf Forests is higher, 0.000269493), Grasslands-Barren 
+(Grasslands is higher, 0.0007389839), Grasslands-Closed Shrublands 
+(Closed Shrublands is higher, 0.0009696893), Savannas-Closed Shrublands
+(Closed Shrublands is higher, 0.004432793), Woody Savannas-Closed Shrublands
+(Closed Shrublands is higher, 0.007075468), Woody Savannas-Barren
+(Woody Savannas is higher, 0.02862893), Open Shrublands-Grasslands 
+(Open Shrublands is higher, 0.04108133), and Savannas-Barren (Savannas is higher, 0.04286845). 
+Closed shrublands and open shrublands seem to be particularly significant in meant growth
+of fires based on these results.
 
 Additionally, Tukey's Honest Significant Differences showed significant difference in mean growth rate
-between the following months: August and January (August is higher, 0.0001989), July and February (July is higher, 0.0016073), August and February (August is higher, 0.0000019), July and March (July is higher, 0.0047414), August and March (August is higher, 0.0000127), July and April (July is higher, 0.0143088), August and April (August is higher, 0.0000339), July and May (July is higher, 0.0001859), August and May (August is higher, 0.0000001), July and June (July is higher, 0.0133577), August and June (August is higher, 0.0000031), November and July (July is higher, 0.0000337), September and August (August is higher, 0.0001458), October and August (August is higher, 0.0286293), November and August (August is higher, 0.0000000), December and August (August is higher, 0.0395852), and November and October (October is higher, 0.0341653). These results indicate that July and August are particulalry meaningful in the mean growth of fires. 
+between the following months: August and January (August is higher, 0.0001989), July and February
+(July is higher, 0.0016073), August and February (August is higher, 0.0000019), July and March
+(July is higher, 0.0047414), August and March (August is higher, 0.0000127), July and April 
+(July is higher, 0.0143088), August and April (August is higher, 0.0000339), July and May 
+(July is higher, 0.0001859), August and May (August is higher, 0.0000001), July and June 
+(July is higher, 0.0133577), August and June (August is higher, 0.0000031), November and July
+(July is higher, 0.0000337), September and August (August is higher, 0.0001458), October and August
+(August is higher, 0.0286293), November and August (August is higher, 0.0000000), December and August 
+(August is higher, 0.0395852), and November and October (October is higher, 0.0341653). These results
+indicate that July and August are particulalry meaningful in the mean growth of fires. 
 
-Something to consider is this result from the linear mode: multiple R-squared is 0.05292 and adjusted R-squared is 0.04764, so these variables explain very little of the variation.  
+Something to consider is this result from the linear mode: multiple R-squared is 0.05292 and 
+adjusted R-squared is 0.04764, so these variables explain very little of the variation.  
 
 ## What is the relationship between time of year and which land cover type sees the longest fast fires?
 
@@ -201,17 +238,36 @@ Two-way ANOVA
 ```{r - 2way anova event duration}
 # Format as aov
 eventlength_aov <- aov(data = event_length, event_dur ~ ig_month + lc_name)
-summary(eventlength_aov) # The null hypothesis is that there is no difference in time of year or land cover type in their relationship to fast fire event length. P-values <.05 mean that the null hypothesis can be rejected and that there is a difference between at least two months and at least two land cover types. 
+summary(eventlength_aov) # The null hypothesis is that there is no difference in time of year or 
+#land cover type in their relationship to fast fire event length. P-values <.05 mean that the null
+#hypothesis can be rejected and that there is a difference between at least two months and at
+#least two land cover types. 
 
 # Run a post-hoc test to look for pairwise differences
 TukeyHSD(eventlength_aov)
-# There is a significant difference in fast fire event length between september and january (january is higher, p=0.0000328). There is a significant difference in fast fire event length between March and February (February is higher, p= 0.0439883). There is a significant difference in fast fire event length between September and February (February is higher, p= 0.0000000). Other months between which there are significant differences in event length are: april-march, may-march, november-march, july-april, august-april, september-april, july-may,august-may, spetember-may, october-may, july-june, september-june, september-july, november-july, september-august, november-august, october-september, november-september, december-september, november-october. Seems like september is consistently significantly different from the event lengths in other months?
-# There is a significant difference in event length between: Evergreen Needleleaf Forests-Closed Shrublands(*), Evergreen Broadleaf Forests-Croplands(*), Evergreen Needleleaf Forests-Croplands(*), Grasslands-Croplands(*), Grasslands(*)-Evergreen Needleleaf Forests, Open Shrublands(*)-Evergreen Needleleaf Forests, Permanent Wetlands(*)-Evergreen Needleleaf Forests, Savannas(*)-Evergreen Needleleaf Forests, Woody Savannas(*)-Evergreen Needleleaf Forests. (*) is next to the one that is higher. 
+# There is a significant difference in fast fire event length between september and january
+#(january is higher, p=0.0000328). There is a significant difference in fast fire event length
+#between March and February (February is higher, p= 0.0439883). There is a significant difference
+#in fast fire event length between September and February (February is higher, p= 0.0000000).
+#Other months between which there are significant differences in event length are: april-march,
+#may-march, november-march, july-april, august-april, september-april, july-may,august-may, 
+#september-may, october-may, july-june, september-june, september-july, november-july, 
+#september-august, november-august, october-september, november-september, december-september,
+#november-october. It seems like september is consistently significantly different from the event
+#lengths in other months. 
+
+# There is a significant difference in event length between: Evergreen Needleleaf Forests-Closed
+#Shrublands(*), Evergreen Broadleaf Forests-Croplands(*), Evergreen Needleleaf Forests-Croplands(*),
+#Grasslands-Croplands(*), Grasslands(*)-Evergreen Needleleaf Forests, Open Shrublands(*)-Evergreen 
+#Needleleaf Forests, Permanent Wetlands(*)-Evergreen Needleleaf Forests, 
+#Savannas(*)-Evergreen Needleleaf Forests, Woody Savannas(*)-Evergreen Needleleaf Forests. 
+#(*) is next to the one that is higher. 
 
 # Format as lm
 eventlength_aov2 <- lm(data = event_length, event_dur ~ ig_month + lc_name)
 summary(eventlength_aov2)
-#The Multiple R-squared is 0.1053. The Adjusted R-squared is 0.1004. This means that these variables don't explain much of the variation, and more variables should be added to the model. 
+#The Multiple R-squared is 0.1053. The Adjusted R-squared is 0.1004. This means that these variables
+#don't explain much of the variation, and more variables should be added to the model. 
 ```
 
 Figures 
@@ -235,13 +291,8 @@ event_dur_fig <- ggplot(event_length,
   #theme(legend.position = "bottom", legend.size = 0.3)
 
 event_dur_fig
-
-
-# Count of events per month in a given year 
-
-
 ```
-
+The question this figure addresses is: What is the relationship between time of year and which land cover type sees the longest fast fires? One visible pattern is that Grasslands seems to have fires of relatively consistent length throughout the year. Evergeen Needleleaf Forests, on the other hand, generally have longer fires June-September than they do during the rest of the year. The x-axis units are in months of the year, and the y-axis units are in days. A limitation of this figure is that it merges 20 years of data, and so patterns over time are not visible here. Another limitation is that it doesn't clearly show the difference in number of events between these land cover types. The Summary Table below shows that the number of events ranges from 3 in Water Bodies to 1,670 in Croplands. Provisional findings: Some of the land cover types may not have enough data to include in our analysis. This includes Water Bodies, Permanent Snow and Ice, and Permanent Wetlands. Another finding is that Evergeen Needleleaf Forest appears to have longer fires in June-September than it does throughout the rest of the year. A question that comes up here is why there is no deciduous forest landcover type in this dataset. 
 
 # Summary Table
 
@@ -249,12 +300,12 @@ event_dur_fig
 # Group data
 duration_table <- california_events_processed %>%
   group_by(lc_name) %>%
-  summarise("Total Number of Fires" = n(), 
+  summarize("Number of Fires" = n(), 
             "Max Duration (days)" = max(event_dur),
             "Year (max dur)" = ig_year[which.max(event_dur)],
-            "Max Event Size (km2)" = max(tot_ar_km2),
-            "Year (max size)" = ig_year[which.max(tot_ar_km2)],
-            "Mean Growth (km2/day)" = mean(mx_grw_km2))%>%
+            "Max Size (km2)" = max(tot_ar_km2),
+            "Year (max size)" = ig_year[which.max(tot_ar_km2)])%>%
+           # "Mean km2/day" = mean(mx_grw_km2))%>%
   rename("Land Cover Type" = lc_name) %>%
   ungroup()
 
@@ -262,7 +313,13 @@ duration_table <- california_events_processed %>%
 summary_duration <- gt(duration_table) %>% 
   fmt_number(decimals = 0)%>% # rounding to a whole number
   tab_header(
-    title = "Fast Fires: Maximum Event Duration and Size by Land Cover Type (2000-2021)")
+    title = "Fire Duration and Size by Land Cover Type",
+    subtitle = "California, 2000-2021")%>%
+    tab_options(
+      heading.title.font.size = "10pt",
+      heading.subtitle.font.size = "8pt",
+      table.font.size = "8pt",
+      latex.use_longtable = FALSE )
   
 summary_duration
 ```
@@ -309,7 +366,8 @@ plot(mean_model_log, which = 1)
 plot(mean_model_log, which = 2)
 #Red flags are still there with the log transforms
 
-#Since Pr(>F)<.001 for each anova model, we will run a post hoc Tukey test to interpret this statistical difference
+#Since Pr(>F)<.001 for each anova model, we will run a post hoc Tukey test to interpret
+#this statistical difference
 TukeyHSD(max_model)
 TukeyHSD(mean_model)
 TukeyHSD(min_model)
