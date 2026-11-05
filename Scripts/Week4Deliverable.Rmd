@@ -22,6 +22,7 @@ library(ggthemes)
 library(ggplot2)
 library(dplyr)
 library(gt)
+library(tidyr)
 
 california_events_processed <- read_csv(here("Data/Processed/california_events_processed.csv"))
 
