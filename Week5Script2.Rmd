@@ -1,0 +1,69 @@
+---
+title: "Week4ExtraScript"
+date: "2026-11-10"
+  output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: console
+  markdown:
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+
+#Loading packages and setting working directory
+library(tidyverse)
+library(here)
+here()
+library(agricolae)
+library(lubridate)
+library(ggthemes)
+library(ggplot2)
+library(dplyr)
+library(gt)
+library(tidyr)
+
+california_events_processed <- read_csv(here("Data/Processed/california_events_processed.csv"))
+
+# Changing lc_name variable from character to factor
+california_events_processed$lc_name <- as.factor(california_events_processed$lc_name)
+
+# Changing eco_name variable from character to factor
+california_events_processed$eco_name <- as.factor(california_events_processed$eco_name)
+
+# changing month to factor format
+california_events_processed$ig_month <- as.factor(california_events_processed$ig_month)
+
+#changing year to factor format
+california_events_processed$ig_year <- as.factor(california_events_processed$ig_year)
+
+#creating the theme
+theme <- theme_bw() +
+  #making the title bold, 13 font, and centered
+  theme(plot.title = element_text(face = "bold", size = 10, hjust = 0.5),
+       #making my axis titles bold and 10 font
+         axis.title = element_text(face = "bold", size = 10),
+       #positioning my legend on the right side of the plot 
+       legend.position = "right"
+  )
+
+#setting the theme
+theme_set(theme)
+
+#Establishing the color palette
+canva_pal("Birds and berries")
+```
+
+
+```{r}
+library(dplyr)
+fire_events <- california_events_processed |>
+  distinct(id, .keep_all = TRUE)
+fire_events_extra_processed <- fire_events[fire_events$lc_name == "Closed Shrublands",
+                                           fire_events$lc_name == "Grasslands",
+                                           fire_events$lc_name == "Croplands",
+                                           fire_events$lc_name == "Evergreen Needleaf Forests",
+                                           fire_events$lc_name == "Savannas",
+                                           fire_events$lc_name == "Open Shrublands"]
+```
