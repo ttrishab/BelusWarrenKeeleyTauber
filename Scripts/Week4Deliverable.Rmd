@@ -55,4 +55,16 @@ theme_set(theme)
 canva_pal("Birds and berries")
 ```
 
+## Time Series Analysis
+```{r, set up time series}
+
+# looking at the data over time
+ggplot(california_events_processed, aes(x = ig_date, y = mn_grw_km2)) +
+  geom_line() +
+  labs(x = "", y = expression("Mean Growth (km"^2*"/day)"))
+
+# converting into time series 
+events_ts <- ts(california_events_processed$mn_grw_km2, start = c(2000,1), frequency = 365)
+
+```
 
