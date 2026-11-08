@@ -23,6 +23,10 @@ library(ggplot2)
 library(dplyr)
 library(gt)
 library(tidyr)
+library(quantreg)
+library(emmeans)
+library(stringr)
+library(broom)
 
 california_events_processed <- read_csv(here("Data/Processed/california_events_processed.csv"))
 
@@ -57,13 +61,183 @@ canva_pal("Birds and berries")
 
 
 ```{r}
-library(dplyr)
+##Make gamma models based on just the interesting land covers
+#Prep Data
 fire_events <- california_events_processed |>
   distinct(id, .keep_all = TRUE)
-fire_events_extra_processed <- fire_events[fire_events$lc_name == "Closed Shrublands",
-                                           fire_events$lc_name == "Grasslands",
-                                           fire_events$lc_name == "Croplands",
-                                           fire_events$lc_name == "Evergreen Needleaf Forests",
-                                           fire_events$lc_name == "Savannas",
-                                           fire_events$lc_name == "Open Shrublands"]
+fire_events_extra_processed <- fire_events |>
+  filter(lc_name  %in% c("Closed Shrublands", "Grasslands", "Croplands",
+                         "Evergreen Needleleaf Forests", "Savannas", 
+                         "Open Shrublands")) |>
+  droplevels()
+#Make gamma models
+min_model <- glm(mn_grw_km2 ~ lc_name, family = Gamma(link = "log"),
+                 data = fire_events_extra_processed)
+
+mean_model <- glm(mu_grw_km2 ~ lc_name, family = Gamma(link = "log"),
+                  data = fire_events_extra_processed)
+
+max_model <-  glm(mx_grw_km2 ~ lc_name, family = Gamma(link = "log"),
+                  data = fire_events_extra_processed)
+summary(min_model)
+summary(mean_model)
+summary(max_model)
+#Make figure
+
+min_predictions <- as.data.frame(emmeans(min_model, ~ lc_name, 
+                                         type = "response")) |>
+  mutate(metric = "Minimum growth")
+mean_predictions <- as.data.frame(emmeans(mean_model, ~ lc_name,
+                                          type = "response")) |>
+  mutate(metric = "Mean growth")
+max_predictions <- as.data.frame(emmeans(max_model, ~lc_name,
+                                         type = "response")) |>
+  mutate(metric = "Maximum Growth")
+growth_predictions <- bind_rows(min_predictions, mean_predictions, 
+                                max_predictions)
+ggplot(growth_predictions, aes(x = response, y = lc_name))+
+  geom_point(size = 2.5) +
+  geom_errorbar(aes(xmin = lower.CL, xmax = upper.CL), width = 0.2) +
+  facet_wrap(~metric, scales = "free_x") +
+  labs(x = "Predicted daily fire growth (km²/day)", y = "Land cover type",
+       title = "Fire growth characteristics across land cover types",
+       subtitle = "Gamma regression estimates with 95% confidence intervals")
+
+#These models and figure strengthen the thesis that Closed and Open Shrublands have relatively high mean and maximum fire growth. Both have higher predicted growth than Grasslands, Savannas, and Croplands. Croplands have the lowest predicted mean and maximum growth by a wide margin, strengthened by the very high amount of fires with that ecoregion status. Evergreen needleleaf's high maximum and low minimum remains. Additionally, minimum growth varies less than mean and maximum. These models overall seem to indicate that fires in shrubland environments tend to exhibit higher growth rates, while fires in croplands tend to exhibit lower growth rates.
+        
+```
+
+
+
+```{r}
+##Make gamma models and figure for eco_name - this time we used all the data since we didn't explore this earlier
+eco_min_model <- glm(mn_grw_km2 ~ eco_name, family = Gamma(link = "log"),
+                 data = fire_events)
+eco_mean_model <- glm(mu_grw_km2 ~ eco_name, family = Gamma(link = "log"),
+                  data = fire_events)
+eco_max_model <-  glm(mx_grw_km2 ~ eco_name, family = Gamma(link = "log"),
+                  data = fire_events)
+summary(eco_min_model)
+summary(eco_mean_model)
+summary(eco_max_model)
+
+
+eco_min_predictions <- as.data.frame(emmeans(eco_min_model, ~ eco_name, 
+                                         type = "response")) |>
+  mutate(metric = "Minimum growth")
+eco_min_stars <- tidy(eco_min_model) |>
+  filter(term != "(Intercept)") |>
+  mutate(eco_name = str_remove(term, "^eco_name"), stars = case_when(
+      p.value < 0.001 ~ "***", p.value < 0.01  ~ "**", p.value < 0.05  ~ "*",
+      TRUE ~ "")) |>
+  select(eco_name, stars)
+
+eco_min_predictions <- eco_min_predictions |>
+  left_join(eco_min_stars, by = "eco_name") |>
+  mutate(stars = replace_na(stars, ""))
+
+eco_mean_predictions <- as.data.frame(emmeans(eco_mean_model, ~ eco_name,
+                                          type = "response")) |>
+  mutate(metric = "Mean growth")
+eco_mean_stars <- tidy(eco_mean_model) |>
+  filter(term != "(Intercept)") |>
+  mutate(eco_name = str_remove(term, "^eco_name"), stars = case_when(
+      p.value < 0.001 ~ "***", p.value < 0.01  ~ "**", p.value < 0.05  ~ "*",
+      TRUE ~ "")) |>
+  select(eco_name, stars)
+
+eco_mean_predictions <- eco_mean_predictions |>
+  left_join(eco_mean_stars, by = "eco_name") |>
+  mutate(stars = replace_na(stars, ""))
+
+eco_max_predictions <- as.data.frame(emmeans(eco_max_model, ~eco_name,
+                                         type = "response")) |>
+  mutate(metric = "Maximum Growth")
+
+eco_max_stars <- tidy(eco_max_model) |>
+  filter(term != "(Intercept)") |>
+  mutate(eco_name = str_remove(term, "^eco_name"), stars = case_when(
+      p.value < 0.001 ~ "***", p.value < 0.01  ~ "**", p.value < 0.05  ~ "*",
+      TRUE ~ "")) |>
+  select(eco_name, stars)
+
+eco_max_predictions <- eco_max_predictions |>
+  left_join(eco_max_stars, by = "eco_name") |>
+  mutate(stars = replace_na(stars, ""))
+
+eco_growth_predictions <- bind_rows(eco_min_predictions, eco_mean_predictions, 
+                                eco_max_predictions)
+
+ggplot(eco_growth_predictions, aes(x = response, y = eco_name))+
+  geom_point(size = 2.5) +
+  geom_errorbar(aes(xmin = lower.CL, xmax = upper.CL), width = 0.2) +
+  geom_text(aes(x = upper.CL, label = stars), hjust = -0.7, size = 5) +
+  facet_wrap(~metric, scales = "free_x") +
+  labs(x = "Predicted daily fire growth (km²/day)", y = "Land cover Ecoregion",
+       title = "Fire growth characteristics across Ecoregions",
+       subtitle = "Gamma regression estimates with 95% confidence intervals",
+       caption = "Significance stars indicate differences from reference ecoregion.
+       * p < 0.05, ** p < 0.01, *** p < 0.001")
+#This model adds geographic patterns into the mix. Some ecoregions exhibit differences across all three growth metrics. For example, the Central California Valley has lower predicted minimum, mean, and maximum growth than the reference ecoregion.This suggests that geographic variation is not limited to peak fire growth.
+```
+
+```{r}
+#Try a combined model for the love of the game
+combined_min_model <- glm(mn_grw_km2 ~ lc_name + eco_name, 
+                          family = Gamma(link = "log"),data = fire_events)
+
+combined_mean_model <- glm(mu_grw_km2 ~ lc_name + eco_name,
+                           family = Gamma(link = "log"),data = fire_events)
+
+combined_max_model <- glm(mx_grw_km2 ~ lc_name + eco_name, 
+                          family = Gamma(link = "log"), data = fire_events)
+combined_min_predictions <- as.data.frame(emmeans(combined_min_model, ~ eco_name, 
+                                             type = "response"))
+combined_mean_predictions <- as.data.frame(emmeans(combined_mean_model, ~ eco_name, 
+                                              type = "response"))
+combined_max_predictions <- as.data.frame(emmeans(combined_max_model, ~ eco_name, 
+                                             type = "response"))
+
+
+#Make a function so fire growth across  ecoregions while accounting for land cover
+#can be estimated
+make_predictions <- function(model, predictions, variable, metric)
+{stars <- broom::tidy(model) |>
+    filter(startsWith(term, variable)) |>
+    mutate(level = str_remove(term, paste0("^", variable)), stars = case_when(
+      p.value < 0.001 ~ "***", p.value < 0.01 ~ "**", p.value < 0.05 ~ "*",
+      TRUE ~ ""))|>
+    select(level, stars)
+predictions |>
+    left_join(stars, by = setNames("level", variable)) |>
+    mutate(stars = tidyr::replace_na(stars, ""), metric = metric)
+}
+combined_eco_predictions <- bind_rows(
+  make_predictions(combined_min_model, combined_min_predictions, "eco_name", 
+                   "Minimum growth"),
+  make_predictions(combined_mean_model, combined_mean_predictions, "eco_name", 
+                   "Mean growth"),
+  make_predictions(combined_max_model, combined_max_predictions,"eco_name",
+                   "Maximum growth"))
+
+#Make figure
+ggplot(combined_eco_predictions, aes(x = response, y = eco_name))+
+  geom_point(size = 2.5) +
+  geom_errorbar(aes(xmin = lower.CL, xmax = upper.CL), width = 0.2) +
+  geom_text(aes(x = upper.CL, label = stars), hjust = -.4, size = 4)+
+  facet_wrap(~metric, scales = "free_x") +
+  labs(x = "Adjusted predicted daily fire growth (km2/day)", 
+       y = "Ecoregion", 
+       title = "Fire growth across ecoregions, accounting for land cover",
+       subtitle = "Gamma regression estimates with 95% confidence intervals",
+       caption = paste(
+      "Stars indicate Dunnett adjusted comparisons against",
+      "the reference ecoregion.",
+      "* p < 0.05, ** p < 0.01, *** p < 0.001"))
+
+#These results indicate that geographic differences can't be explained entirely via land cover related explanations. The Sierra Nevada, Klamath mountains, and Cascades have consistently lower growth estimates, even when accounting for land cover. This might indicate that these areas are less at risk of fast fires. On the other hand, the Southern and Baja California Pine Oak Mountains consistently have higher maximum and mean growth, but not minimum growth. Next, the Northern Basin and Range region lacks enough evidence to conclude any difference from the reference. Overall, these results strengthen the idea that some ecoregions show consistently lower growth across all three metrics, while others show differences primarily in mean and maximum growth.
+```
+
+
+
 ```
