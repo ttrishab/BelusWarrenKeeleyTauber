@@ -62,15 +62,78 @@ canva_pal("Birds and berries")
 ## Time Series Analysis
 ```{r, set up time series}
 
-# looking at the data over time
+# looking at the data over time, checking for gaps
 ggplot(california_events_processed, aes(x = ig_date, y = mn_grw_km2)) +
   geom_line() +
   labs(x = "", y = expression("Mean Growth (km"^2*"/day)"))
 
-# converting into time series 
-events_ts <- ts(california_events_processed$mn_grw_km2, start = c(2000,1), frequency = 365)
+mngrowth_bymonthyear <- california_events_processed %>% 
+  mutate()
 
+# converting into time series 
+meangrowth_ts <- ts(california_events_processed$mn_grw_km2, start = c(2000,1), frequency = 365)
+
+#look at time series object
+head(meangrowth_ts)
 ```
+
+```{r, generate decomposition}
+
+# Generate the decomposition
+meangrowth_decomposed <- stl(events_ts, s.window = "periodic")
+
+# Visualize the decomposed series. 
+plot(meangrowth_decomposed)
+
+# extract the components and turn them into data frames
+meangrowth_components <- as.data.frame(meangrowth_decomposed$time.series[,1:3])
+
+# add date and observed data into components dataframe
+meangrowth_components <- mutate(meangrowth_components,
+        Observed = california_events_processed$mn_grw_km2,     
+        Date = california_events_processed$ig_date)
+
+# visualize how the trend maps onto the data
+ggplot(meangrowth_components) +
+  geom_line(aes(y = Observed, x = Date),  size = 0.25) +
+  geom_line(aes(y = trend, x = Date), color = "#c13d75ff") +
+  geom_hline(yintercept = 0, lty = 2) +
+  ylab(expression("Mean Growth (km"^2*"/day)"))
+
+# visualize how the seasonal cycle maps onto the data
+ggplot(meangrowth_components) +
+  geom_line(aes(y = Observed, x = Date),  size = 0.25) +
+  geom_line(aes(y = seasonal, x = Date), color = "#c13d75ff") +
+  geom_hline(yintercept = 0, lty = 2) +
+  ylab(expression("Mean Growth (km"^2*"/day)"))
+```
+
+```{r, landcover analysis}
+# create time series objects based on interesting land cover types (start with open shrublands, closed shrublands, croplands)
+
+OpSh_events <- california_events_processed %>% 
+  filter (lc_name == "Open Shrublands") %>% 
+  mutate(month_year = floor_date(ig_date, "month")) %>%
+  group_by(month_year) %>%
+  summarise(mean_growth = mean(mn_grw_km2, na.rm = TRUE),
+    .groups = "drop")
+
+
+ClSh_events <- filter (california_events_processed, lc_name == "Closed Shrublands")
+Cr_events <- filter (california_events_processed, lc_name == "Croplands")
+
+plot(OpSh_events)
+# create time series objects 
+
+mng_OpSh_ts <- ts(OpSh_events$mn_grw_km2, start = c(2000,1), frequency = 365)
+mng_ClSh_ts <- ts(ClSh_events$mn_grw_km2, start = c(2000,1), frequency = 365)
+mng_Cr_ts <- ts(Cr_events$mn_grw_km2, start = c(2000,1), frequency = 365)
+
+head(mng_Op)
+# generate decomposition
+mng_OpSh_decomp <- stl(mng_OpSh_ts, s.window = "periodic")
+```
+
 
 ##Gamma analyses and working with eco_name as well as lc_name
 ```{r}
