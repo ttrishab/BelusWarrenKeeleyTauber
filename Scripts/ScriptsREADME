@@ -34,8 +34,9 @@ land cover types, with stars depending on statistical significance.
 In Week4Deliverable, we first 
 
 ->Time Series
+
 Next, we run gamma models (glm()) on the land covers we found most interesting,
-generating a more focused graphic than in Week3Deliverable. Next, we ran glm() gamma 
+generating a more focused graphic than in Week3Deliverable. We then ran glm() gamma 
 regressions where we regressed ecoregion onto fire growth rather than land cover type,
 for min, mean, and max growth, to see if any geographical patterns emerged that simply
 focusing on land cover might obscure. Lastly, we ran a gamma model that combines
