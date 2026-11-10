@@ -68,7 +68,17 @@ ggplot(california_events_processed, aes(x = ig_date, y = mn_grw_km2)) +
   labs(x = "", y = expression("Mean Growth (km"^2*"/day)"))
 
 mngrowth_bymonthyear <- california_events_processed %>% 
-  mutate()
+  mutate(month_year = floor_date(ig_date, "month")) %>%
+  group_by(month_year) %>%
+  summarise(mean_growth = mean(mn_grw_km2, na.rm = TRUE),
+    .groups = "drop")
+
+# looking at the data over time, checking for gaps
+ggplot(mngrowth_bymonthyear, aes(x = month_year, y =mean_growth )) +
+  geom_line() +
+  labs(x = "", y = expression("Mean Growth (km"^2*"/day)"))
+
+plot(mngrowth_bymonthyear)
 
 # converting into time series 
 meangrowth_ts <- ts(california_events_processed$mn_grw_km2, start = c(2000,1), frequency = 365)
