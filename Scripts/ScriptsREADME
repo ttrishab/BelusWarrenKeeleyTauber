@@ -1,1 +1,44 @@
 README file for related scripts, add any explanations as necessary.
+
+1. ImportingArcGIS:
+This script imports the edited California_events.shp shapefile that was cut down to size in ArcGIS.
+
+2. ProcessedDataScript:
+This script goes through the California_events shapefile and edits the date format, 
+cuts out extraneous columns, and saves the file into california_events_processed, so that it is easier to do work on it.
+
+3. ExploratoryFigure:
+This script makes an exploratory boxplot and scatter plot using ggplot2 that plot 
+land cover and fire growth rate and year and fire growth rate respectively. In addition,
+a data quality audit checking the dimensions of the california_events_processed file 
+in relation to california_events.shp and checking how many na entries there are (3).
+
+4. Week3Deliverable
+In Week3 Deliverable, several statistical analyses are done on california_events_processed.
+First, a two-way ANOVA (aov()) was done to explore if the predictors of land cover and month may cause
+a variation in the response variable, mean growth of fire per day, with a boxplot using ggplot2 
+illustrating the results. Second, an anova (aov()) exploring the relationship between 
+time of year and fast fire length was run, with a boxplot to visually explore the model results.
+Third, we produced a summary table (gt()) in order to illustrate the many different 
+variables we had to work with and what variables guided our thought process. Then, we 
+ran three anova models exploring the relationship between land cover and minimum, mean, and maximum 
+fire growth rate. We also ran a q-q plot and a residuals vs. fitted plot to examine if 
+an anova was even numerically appropriate here, which threw some red flags even when we
+included a log transform. We ran tukey tests (TukeyHSD()) anyways, making a data table 
+to illustrate the significant results. Lastly, we ran three gamma regressions (glm()) because 
+we thought it might behave better with the data. We then assigned stars to significant P values
+and made a point plot showing relative max, mean, and min fire growth rates for different
+land cover types, with stars depending on statistical significance.
+
+5. Week4Deliverable
+In Week4Deliverable, we first 
+
+->Time Series
+Next, we run gamma models (glm()) on the land covers we found most interesting,
+generating a more focused graphic than in Week3Deliverable. Next, we ran glm() gamma 
+regressions where we regressed ecoregion onto fire growth rather than land cover type,
+for min, mean, and max growth, to see if any geographical patterns emerged that simply
+focusing on land cover might obscure. Lastly, we ran a gamma model that combines
+land cover type and ecoregion (glm(mn_grw_km2 ~ lc_name + eco_name)) to see whether 
+there were geographic differences in fire growth rate that land cover couldn't explain.
+There were similar point plots for each of the gamma regressions here to keep things consistent.

@@ -103,3 +103,6 @@ Description: estimated ignition y coordinate
 
 Variable: geom
 Description: list of geometry coordinates
+
+Variable: eco_name
+Description: Character string of the ecoregion type where the event occurred.
