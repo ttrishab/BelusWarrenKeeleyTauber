@@ -31,10 +31,11 @@ and made a point plot showing relative max, mean, and min fire growth rates for 
 land cover types, with stars depending on statistical significance.
 
 5. Week4Deliverable
-In Week4Deliverable, we first 
-
-->Time Series
-
+In Week4Deliverable, we first ran a time series (ts()), which required some interpolation for months with
+missing/not enough data. We then decomposed the time series into overall growth and the 
+the mean growth values associated with specific months (stl()). In order to back the stl() code
+and resulting graphic statisticall, we ran a Kendall::SeasonalMannKendall() model.
+Finally, we made a graphic visualizing any trend or lack of trend present. 
 Next, we run gamma models (glm()) on the land covers we found most interesting,
 generating a more focused graphic than in Week3Deliverable. We then ran glm() gamma 
 regressions where we regressed ecoregion onto fire growth rather than land cover type,
