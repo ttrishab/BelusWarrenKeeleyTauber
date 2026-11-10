@@ -59,29 +59,87 @@ theme_set(theme)
 canva_pal("Birds and berries")
 ```
 
-## Time Series Analysis
-```{r, set up time series}
+## Summary Table
 
+```{r - summary table}
+# Group data
+duration_table <- california_events_processed %>%
+  group_by(lc_name) %>%
+  summarize("Number of Fires" = n(),
+            "Total Area Burned (km2)" = sum(tot_ar_km2),
+            "Max Duration (days)" = max(event_dur),
+            "Year (max dur)" = ig_year[which.max(event_dur)],
+            "Max Size (km2)" = max(tot_ar_km2),
+            "Year (max size)" = ig_year[which.max(tot_ar_km2)],
+            "Mean Size (km2)" = mean(tot_ar_km2))%>%
+           # "Mean km2/day" = mean(mx_grw_km2))%>%
+  rename("Land Cover Type" = lc_name) %>%
+  ungroup()
+
+# formatting summary table 
+summary_duration <- gt(duration_table) %>% 
+  fmt_number(decimals = 0)%>% # rounding to a whole number
+  tab_header(
+    title = "Fire Duration and Size by Land Cover Type",
+    subtitle = "California, 2000-2021")%>%
+    tab_options(
+      heading.title.font.size = "10pt",
+      heading.subtitle.font.size = "8pt",
+      table.font.size = "8pt",
+      latex.use_longtable = FALSE )
+  
+summary_duration
+```
+
+## Time Series Analysis
+```{r, prep data for time series}
 # looking at the data over time, checking for gaps
 ggplot(california_events_processed, aes(x = ig_date, y = mn_grw_km2)) +
   geom_line() +
   labs(x = "", y = expression("Mean Growth (km"^2*"/day)"))
+#There are many days without fire events. 
 
+# Create a new data frame with average growth rate by month to try addressing the gaps
 mngrowth_bymonthyear <- california_events_processed %>% 
   mutate(month_year = floor_date(ig_date, "month")) %>%
   group_by(month_year) %>%
   summarise(mean_growth = mean(mn_grw_km2, na.rm = TRUE),
-    .groups = "drop")
+    .groups = "drop") %>% 
+  # I asked chatGPT for help writing code that would create a row for every month, not just the months with data. The complete function below is what it helped me with. 
+  complete( 
+    month_year = seq.Date(
+      min(month_year, na.rm = TRUE),
+      max(month_year, na.rm = TRUE),
+      by = "month"
+    )
+  ) %>%
+  mutate(mean_growth = if_else(is.nan(mean_growth), NA_real_, mean_growth))
 
 # looking at the data over time, checking for gaps
 ggplot(mngrowth_bymonthyear, aes(x = month_year, y =mean_growth )) +
   geom_line() +
   labs(x = "", y = expression("Mean Growth (km"^2*"/day)"))
+# there are still months without data, which means we will need to interpolate
+```
 
-plot(mngrowth_bymonthyear)
+```{r}
+# checking for number of NAs -> it's 12
+summary(mngrowth_bymonthyear$mean_growth)
 
+# interpolating to replace the NAs
+mngrowth_clean <- 
+  mngrowth_bymonthyear %>% 
+  mutate( mngrowth_clean = zoo::na.approx(mean_growth) )
+
+# check for NAs
+summary(mngrowth_clean$mngrowth_clean) # there are non!
+
+```
+
+```{r, set up time series}
 # converting into time series 
-meangrowth_ts <- ts(california_events_processed$mn_grw_km2, start = c(2000,1), frequency = 365)
+meangrowth_ts <- ts(mngrowth_clean$mngrowth_clean, start = c(2000,1), frequency = 12)
+# frequency is 12 because there are 12 observations each year
 
 #look at time series object
 head(meangrowth_ts)
@@ -90,60 +148,69 @@ head(meangrowth_ts)
 ```{r, generate decomposition}
 
 # Generate the decomposition
-meangrowth_decomposed <- stl(events_ts, s.window = "periodic")
+mngrowth_decomposed <- stl(meangrowth_ts, s.window = "periodic")
 
 # Visualize the decomposed series. 
-plot(meangrowth_decomposed)
+plot(mngrowth_decomposed)
 
 # extract the components and turn them into data frames
-meangrowth_components <- as.data.frame(meangrowth_decomposed$time.series[,1:3])
+meangrowth_components <- as.data.frame(mngrowth_decomposed$time.series[,1:3])
 
 # add date and observed data into components dataframe
 meangrowth_components <- mutate(meangrowth_components,
-        Observed = california_events_processed$mn_grw_km2,     
-        Date = california_events_processed$ig_date)
+        Observed = mngrowth_clean$mngrowth_clean,     
+        Date = mngrowth_clean$month_year)
 
 # visualize how the trend maps onto the data
 ggplot(meangrowth_components) +
-  geom_line(aes(y = Observed, x = Date),  size = 0.25) +
+  geom_line(aes(y = Observed, x = Date),  linewidth = 0.25) +
   geom_line(aes(y = trend, x = Date), color = "#c13d75ff") +
   geom_hline(yintercept = 0, lty = 2) +
   ylab(expression("Mean Growth (km"^2*"/day)"))
 
 # visualize how the seasonal cycle maps onto the data
 ggplot(meangrowth_components) +
-  geom_line(aes(y = Observed, x = Date),  size = 0.25) +
+  geom_line(aes(y = Observed, x = Date),  linewidth = 0.25) +
   geom_line(aes(y = seasonal, x = Date), color = "#c13d75ff") +
   geom_hline(yintercept = 0, lty = 2) +
   ylab(expression("Mean Growth (km"^2*"/day)"))
+# note that seasonal data is less than zero in each cycle
 ```
 
-```{r, landcover analysis}
-# create time series objects based on interesting land cover types (start with open shrublands, closed shrublands, croplands)
+```{r}
+# Trend Analysis: is there a monostatic trend? 
+# null hypothesis: data is stationary, no trend
 
-OpSh_events <- california_events_processed %>% 
-  filter (lc_name == "Open Shrublands") %>% 
-  mutate(month_year = floor_date(ig_date, "month")) %>%
-  group_by(month_year) %>%
-  summarise(mean_growth = mean(mn_grw_km2, na.rm = TRUE),
-    .groups = "drop")
+# Run Seasonal Mann Kendall test
+mngrowth_trend1 <- Kendall::SeasonalMannKendall(meangrowth_ts)
 
+# Inspect results
+mngrowth_trend1
+summary(mngrowth_trend1)
+# 2-sided pvalue = 0.37883. We cannot reject the null hypothesis. We don't have enough information to say that the mean fire growth per month in California has changed over time. 
 
-ClSh_events <- filter (california_events_processed, lc_name == "Closed Shrublands")
-Cr_events <- filter (california_events_processed, lc_name == "Croplands")
+# another way of running the smk test
+mngrowth_trend2 <- trend::smk.test(meangrowth_ts)
 
-plot(OpSh_events)
-# create time series objects 
-
-mng_OpSh_ts <- ts(OpSh_events$mn_grw_km2, start = c(2000,1), frequency = 365)
-mng_ClSh_ts <- ts(ClSh_events$mn_grw_km2, start = c(2000,1), frequency = 365)
-mng_Cr_ts <- ts(Cr_events$mn_grw_km2, start = c(2000,1), frequency = 365)
-
-head(mng_Op)
-# generate decomposition
-mng_OpSh_decomp <- stl(mng_OpSh_ts, s.window = "periodic")
+#inspect the results
+mngrowth_trend2
+summary(mngrowth_trend2)
+# We can reject the null hypothesis of no trend for season 6, or June. There has been a significant increase in mean monthly growth of fires over time for the month of June (S=80), (p=0.017053). We cannot reject the null hypothesis for any other month. 
 ```
 
+```{r}
+# Visualizing the trend (or the lack of trend)
+mngrowth_plot <-
+ggplot(mngrowth_bymonthyear, aes(x = month_year, y = mean_growth)) +
+  geom_point() +
+  geom_line() +
+  ylab("Average Fire Event Growth") +
+  geom_smooth( method = lm )
+print(mngrowth_plot)
+# this visualization supports the analysis above, that there is not a trend over time in the average growth per month of fire events in california. 
+
+```
+Based on the time series analysis so far, mean growth of fire event does not show a trend over time. It may be worth running the same analysis using the average maximum growth by month. 
 
 ##Gamma analyses and working with eco_name as well as lc_name
 ```{r}
