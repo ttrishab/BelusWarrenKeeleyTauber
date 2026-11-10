@@ -69,6 +69,8 @@ library(ggthemes)
 library(ggplot2)
 library(dplyr)
 library(gt)
+library(emmeans)
+library(broom)
 
 california_events_processed <- read_csv(here("Data/Processed/california_events_processed.csv"))
 
@@ -405,36 +407,70 @@ duration.
 library(tidyr)
 
 #make dataframe with mean, sd for each of the three categories and pivot it 
-growth_summary <- fire_events |>
-  group_by(lc_name) |>
-  summarize(
-     max_growth = mean(mx_grw_km2, na.rm = TRUE),
-    mean_growth = mean(mu_grw_km2, na.rm = TRUE),
-    min_growth = mean(mn_grw_km2, na.rm = TRUE),
-    max_se = sd(mx_grw_km2, na.rm = TRUE) / sqrt(sum(!is.na(mx_grw_km2))),
-    mean_se = sd(mu_grw_km2, na.rm = TRUE) / sqrt(sum(!is.na(mu_grw_km2))),
-    min_se = sd(mn_grw_km2, na.rm = TRUE) / sqrt(sum(!is.na(mn_grw_km2))),
-    n = n(),
-    .groups = "drop"
-  )
-se_long <- growth_summary |>
-  pivot_longer(cols = c(max_se, mean_se, min_se),names_to = "metric",
-    values_to = "se")|>
-  mutate(metric = recode(metric,max_se = "max_growth",mean_se = "mean_growth",
-      min_se = "min_growth"))
-growth_long <- growth_summary |>
-  pivot_longer(cols = c(max_growth, mean_growth, min_growth),names_to = "metric",
-    values_to = "growth")
-growth_long <- growth_long |>
-  left_join(se_long, by = c("lc_name", "metric"))
+
+lc_max_model <- glm(mx_grw_km2 ~ lc_name, data = fire_events, 
+                    family = Gamma(link = "log"))
+
+lc_mean_model <- glm(mu_grw_km2 ~ lc_name, data = fire_events, 
+                     family = Gamma(link = "log"))
+
+lc_min_model <- glm(mn_grw_km2 ~ lc_name, data = fire_events, 
+                    family = Gamma(link = "log"))
+lc_min_predictions <- as.data.frame(emmeans(lc_min_model, ~ lc_name, 
+                                            type = "response")) |>
+  mutate(metric = "Minimum growth")
+lc_mean_predictions <- as.data.frame(emmeans(lc_mean_model, ~ lc_name, 
+                                             type = "response")) |>
+  mutate(metric = "Mean growth")
+
+lc_max_predictions <- as.data.frame(emmeans(lc_max_model, ~ lc_name, 
+                                            type = "response")) |>
+  mutate(metric = "Maximum growth")
+
+
+lc_max_stars <- tidy(lc_max_model) |>
+  filter(term != "(Intercept)") |>
+  mutate(lc_name = str_remove(term, "^lc_name"), stars = case_when(
+      p.value < 0.001 ~ "***", p.value < 0.01 ~ "**", p.value < 0.05 ~ "*", 
+      TRUE ~ "")) |>
+  select(lc_name, stars)
+lc_mean_stars <- tidy(lc_mean_model) |>
+  filter(term != "(Intercept)") |>
+  mutate(lc_name = str_remove(term, "^lc_name"),stars = case_when(
+      p.value < 0.001 ~ "***", p.value < 0.01 ~ "**", p.value < 0.05 ~ "*",
+      TRUE ~ "")) |>
+  select(lc_name, stars)
+lc_min_stars <- tidy(lc_min_model) |>
+  filter(term != "(Intercept)") |>
+  mutate( lc_name = str_remove(term, "^lc_name"), stars = case_when(
+    p.value < 0.001 ~ "***", p.value < 0.01 ~ "**", p.value < 0.05 ~ "*",
+      TRUE ~ "")) |>
+  select(lc_name, stars)
+
+lc_max_predictions <- lc_max_predictions |>
+  left_join(lc_max_stars, by = "lc_name") |>
+  mutate(stars = replace_na(stars, ""))
+lc_mean_predictions <- lc_mean_predictions |>
+  left_join(lc_mean_stars, by = "lc_name") |>
+  mutate(stars = replace_na(stars, ""))
+lc_min_predictions <- lc_min_predictions |>
+  left_join(lc_min_stars, by = "lc_name") |>
+  mutate(stars = replace_na(stars, ""))
+
+lc_growth_predictions <- bind_rows(lc_min_predictions, lc_mean_predictions,
+                                   lc_max_predictions)
 
 #Make graphic plotting max/mean/min fire growth rates across land cover types
-ggplot(growth_long, aes(x = growth, y = lc_name))+
+ggplot(lc_growth_predictions, aes(x = response, y = lc_name))+
   geom_point(size = 2.5) +
-  geom_errorbar(aes(xmin = growth - 1.96 * se, xmax = growth + 1.96 * se), width = 0.2) +
+  geom_errorbar(aes(xmin = lower.CL, xmax = upper.CL), width = 0.2) +
+  geom_text(aes(x = upper.CL, label = stars), hjust = -0.7, size = 5) +
   facet_wrap(~metric, scales = "free_x") +
   labs(x = "Daily fire growth (km²/day)",y = "Land cover type",
-       title = "Daily fire growth across land cover types")
+       title = "Daily fire growth across land cover types",
+       subtitle = "Gamma regression estimates with 95% confidence intervals",
+       caption = "Significance stars indicate differences from reference land cover.
+       \n* p < 0.05, ** p < 0.01, *** p < 0.001")
 
 ```
 #This graphic plots daily fire growth on the X axis and land cover type per event on the X axis. As mentioned before, open shrubland's relatively high growth levels jumps out, especially given its significance after running the anova and tukey tests. Closed shrubland and evergreen needleleaf forests also have relatively high means. Some land cover types not mentioned earlier, like evergreen broadleaf forests and urban/built up lands also visually jump out as having possibly higher growth rates, but they were not found to be statistically significant after the Tukey tests, which is visible given the extremely high spread for both units.That represents one limitation of this figure - we felt it was important to include results for all of the land cover types so that the reader could parse all the data, but not all of them were statistically significant. The primary takeaway from this figure and the associated tables up above is to possibly take a deeper dive into open shrubland fire growth specifically, perhaps running some of the above tests filtered to examine only open shrubland. Examining needleleaf forests might provide useful results as well given their prevalence in California.
