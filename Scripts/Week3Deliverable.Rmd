@@ -176,7 +176,7 @@ mean_growth_anova_plot_separate
 #based on time of year.
 
 #Week 5 edit to improve plot
-mean_growth_anova_plot_separate_improved <- ggplot(mean_growth, aes(y = mu_grw_km2, x = ig_month)) +
+mean_growth_anova_plot_separate_improved_large <- ggplot(data = filter(mean_growth,lc_name %in% c("Closed Shrublands", "Evergreen Broadleaf Forests", "Evergreen Needleleaf Forests", "Grasslands", "Open Shrublands", "Woody Savannas")), aes(y = mu_grw_km2, x = ig_month)) +
   geom_boxplot(alpha = 0.9, size= 0.5, outlier.size = 0.3, outlier.alpha = 0.7) +
   facet_wrap(vars(lc_name), ncol = 3) +
   coord_cartesian(ylim = c(0, 75)) +
@@ -184,25 +184,19 @@ mean_growth_anova_plot_separate_improved <- ggplot(mean_growth, aes(y = mu_grw_k
        x= "Month",
        y="Mean Growth (km2)") 
 
-mean_growth_anova_plot_separate_improved
+mean_growth_anova_plot_separate_improved_large
 
-event_dur_fig <- ggplot(event_length, 
-                        aes(y = event_dur, 
-                            x = ig_month, 
-                            #color = lc_name
-                            )
-                        )+
-  geom_boxplot(alpha = 0.9, 
-               size= 0.5, 
-               outlier.size = 0.3,
-               outlier.alpha = 0.7)+
-  labs(title = "Duration of Fire Events by Land Use Classes and Months",
+mean_growth_anova_plot_separate_improved_small <- ggplot(data = filter(mean_growth,lc_name %in% c("Barren", "Croplands", "Cropland/Natural Vegetation Mosaics", "Permanent Snow and Ice", "Permanent Wetlands", "Urban and Built-up Lands", "Water Bodies")), aes(y = mu_grw_km2, x = ig_month)) +
+  geom_boxplot(alpha = 0.9, size= 0.5, outlier.size = 0.3, outlier.alpha = 0.7) +
+  facet_wrap(vars(lc_name), ncol = 3) +
+  coord_cartesian(ylim = c(0, 8)) +
+  labs(title = "Mean Growth of Wildfires across Land Use Classes and Months",
        x= "Month",
-       y="Fire Event Duration (days)"
-       )+
-  facet_wrap(vars(lc_name), ncol = 3)+
-  coord_cartesian(ylim = c(0, 50))
-  #theme(legend.position = "bottom", legend.size = 0.3)
+       y="Mean Growth (km2)") 
+
+mean_growth_anova_plot_separate_improved_small
+
+
 ```
 
 ###Analysis
